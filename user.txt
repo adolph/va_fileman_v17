@@ -1,0 +1,3810 @@
+ 
+                   
+		   V A   F I L E M A N
+                      USER'S MANUAL
+                Version 17 - April, 1986
+ 
+                        CONTENTS
+ 
+    I.   INTRODUCTION
+    II.  USER INTERACTION CONVENTIONS
+    III. GETTING STARTED
+    IV.  HOW TO RETRIEVE DATA
+     	A. The 'INQUIRE' Option
+     	B. The Basic 'PRINT' Option
+     	C. Format Control on Output Fields
+     	D. Print Templates
+     	E. "SORT BY"
+     	F. Headings
+     	G. Multiple Copies
+     	H. Statistics
+    V.   HOW TO "SEARCH" FILES
+    VI.  HOW TO CHANGE DATA
+     	A. The 'ENTER AND EDIT' Option
+     	B. The "Word-Processing" Editor
+     	C. Default Values
+     	D. "Looping"
+     	E. Input Templates
+     	F. Forcing Special Prompts
+    VII. HOW TO DEFINE FILES
+     	A. Creating a New File
+     	B. Creating Field Definitions
+     	C. An Example
+     	D. Editing and Deleting Fields
+     	E. Entries "Referenced by Number"
+    VIII UTILITY ROUTINES
+     	A. Editing File Descriptions (File Delete)
+     	B. Cross-referencing
+     	C. "Re-indexing"
+     	D. Verifying File Data
+     	E. "Identifiers"
+     	F. "Output Transform"
+     	G. Uneditable Fields
+     	H. Template Edit
+    IX.  "COMPUTED-FIELD" EXPRESSIONS
+     	A. Creating Computed Fields
+     	B. "On-the-Fly" Computed Expressions
+     	C. Functions
+     	D. "Extended Pointers" to Other Files
+     	E. "Relational Jumps" Across Files
+    X.   DATA SECURITY
+     	A. Access to Files, Fields and Templates
+     	B. Access to Search Results
+    XI.  TRANSFERRING ENTRIES
+     	A. Transferring Within the Same File
+     	B. Transferring from One File to Another
+    XII. "TRIGGERING" DATA CHANGES
+ 
+VA FileMan  V.17 - Apr 1986                  User's Manual        (1)
+
+
+
+
+                         I.  INTRODUCTION
+ 
+ 
+ 
+VA FileMan is a package of on-line computer routines to be run on video or 
+printer terminals in an interactive "dialogue" with a wide variety of users.
+VA FileMan can be used either as a stand-alone Database system, or as a set 
+of application utilities.  In either mode, it is used to define, enter, and 
+retrieve information from a set of computer-stored Files, each of which is 
+described by a "data dictionary".  The user-specified "data dictionary" 
+parameters drive all input to, and output from, the Files.
+ 
+What, in computer terms, is a File?  A File is simply a list of things.  A 
+File of "options" may consist of the three words "buy", "sell", and "hold".  
+A File of "hospital locations" may consist of "ICU", "CCU", "1 East", etc.  
+We call each of the "things" in a File an Entry.  Each Entry has some kind 
+of Name ("buy", "ICU"), although there are certain kinds of Files in which 
+two or more Entries have the same Name (two "John Smith"s in a patient File, 
+four "B-flat Major Piano Sonata"s in the File of Mozart's works).  To avoid 
+confusion in such cases, we give to every File Entry a unique Internal Entry 
+Number, which is simply a positive number.  Thus we can have:
+ 
+    1 = "buy"       1 = "ICU"           1 = "G-Major Piano Minuet"
+    2 = "sell"    1.4 = "CCU"         281 = "B-flat Major Piano Sonata"
+    3 = "hold"     19 = "1 East"      570 = "B-flat Major Piano Sonata"
+                   47 = "3 West"      622 = "A-Major Clarinet Concerto"
+                                      626 = "Requiem"
+ 
+Notice that these numbers can be assigned arbitrarily by the computer, and 
+need not be accessible to the typical user of the File unless they have 
+particular meaning for him.  Thus we can make a distinction between Files 
+whose Entries are "referenced by number" and Files whose Entries are not.
+ 
+We also like to make a distinction between Files whose number of Entries is
+pretty much fixed (like the Mozart File), and Files which frequently gain and
+lose Entries (like the File of resident MD's at a medical center).  We 
+sometimes refer to the latter type as a "Learn-As-You-Go" File, because the 
+computer routines know that a new Entry Name can turn up for such a File at 
+any time.  Thus, for example, there are certain conditions under which, when 
+the computer asks the terminal user to specify a particular physician, the 
+user should be allowed to type a brand-new physician name, rather than one 
+that already is "on file".  The computer, after requesting verification that 
+the new name is indeed new (and not, say, the misspelling of an old name), 
+then proceeds to add the new Entry to the File of physicians.
+ 
+Each File Entry must have a Name and a Number, but it might have other pieces
+of information associated with it as well.  For every "hospital location", we
+might want to record a "number of beds".  For some patients (but not 
+necessarily all) we might want to record an "attending physician".  We call 
+"number of beds" and "attending physician" Attributes of their respective 
+Files.  These Attributes can look like numbers, dates, etc., and there may be
+a great number of possible Attributes for a given Entry, but no Entry need 
+absolutely be required to have more than a Name.
+ 
+Sometimes, the value of a particular File Entry Attribute is the Name of an 
+Entry in a different File.  We call this a "pointer"-type Attribute.  An 
+example would be the Attribute of a patient File called "attending physician".
+For a given patient, the answer to the question "who is this patient's 
+attending physician?" is the Name of an Entry in the File of physicians.  So 
+we can say that the "attending physician" Attribute "points to" an auxiliary 
+File, the physician File.  Other auxiliary Files pointed to by the patient 
+File could include "dictionaries" of occupations, religions, states of the 
+Union, diagnoses, and so forth.  A Database system that interconnects many 
+Files in this way is sometimes called a "networked" system.
+ 
+Some Attributes are so interesting that we want to be able to see quickly what
+Entries go with what Attribute values.  For example, we will want to know all
+patients who have an "attending physician" equal to "Dr.Smith", or who have
+Social Security Number "888-88-8888" (there should be at most one!).  We say
+that we Cross-reference the patient File by the "Social Security Number" 
+Attribute.
+ 
+To complicate things further, an Attribute may be "multiple-valued" for a 
+given Entry: a patient may have several "attendg physicians", and each of 
+them may in turn have particular data, like "fees", associated with them.  
+Therefore, we require the capability to have Attribute "sub-Fields" 
+associated with certain multiple-valued Fields.
+ 
+In accordance with the above, then, this manual will describe how the VA 
+FileMan package allows a user to:
+ 
+    
+      
+     1. Display any or all Field values from any or all File Entries
+        (Chapter IV.)
+      
+     2. Search a File to select Entries on the basis of specified
+        "true-or-false" criteria (Chapter V.)
+      
+     3. Enter, edit, and delete File data (Chapter VI.)
+      
+     4. Create a new File (Chapter VII.A.)
+      
+     5. Create new Attribute Fields for existing Files (Chapter VII.B.)
+      
+     6. Create "cross-reference" lookups (Chapter VII.B.)
+      
+     7. Move selected data values from one Entry to another, both within the
+        same File and across Files (Chapter XI.)
+      
+      
+ 
+VA FileMan  V.17 - Apr 1986                      User's Manual        (2)
+
+
+     
+
+     
+     II.  CONVENTIONS FOR USER INTERACTION WITH THE COMPUTER
+     
+     
+     
+      
+The user communicates with the machine in a dialogue.  Every message typed by
+the user must be terminated by hitting the 'RETURN' key.  When the machine
+asks the user a question, it will typically follow the question with a colon
+(":"), e.g.,
+      
+         DATE OF BIRTH:
+      
+If the answer to the question is a choice of several things, the question may
+appear prefixed with the word "Select", as in:
+      
+         Select PATIENT NAME:
+      
+If the question requires either a "Yes" or "No" response (in which case simply
+"Y" or "N" is acceptable), the question may be followed by a question mark,
+rather than by a colon, e.g.,
+      
+         ARE YOU SURE?
+      
+Sometimes, the text of the question will include, within parentheses, the
+different allowable responses that the user can make to that question:
+      
+         ARE YOU SURE(Y/N)?
+      
+The system checks each user answer immediately after it is entered.  In
+general, whenever the system determines that an answer is invalid for any
+reason, it sounds a "beep", displays two spaces and two question marks, and
+then re-asks the mis-answered question on a new line.
+ 
+In many cases, the system checks the user's answer against an
+internally-stored table of "valid" answers, but will allow the user to
+indicate that what he has answered should, from now on, be considered to be
+one of those valid answers.  In this "Learn-As-You-Go" mode, the user simply
+types his answer, the system "beeps" and asks something like:
+ 
+         ARE YOU ADDING A NEW CLINIC?
+ 
+If the user responds with a "Y" (or YES), the system files the new clinic (or
+whatever) in its validation table, and allows the answer.  If anything other
+than "Y" is typed, the original answer will be treated as invalid, and the
+question will be repeated.
+ 
+Sometimes the question that the system is asking the user has a "standard
+expected answer".  In order to save the user the trouble of typing this "most
+probable" answer, the system will prompt it, and follow that prompt with a
+double slash ("//").  Then the user either enters a "null response" (that is,
+he just presses 'RETURN'), to indicate that he accepts the prompt as his
+answer, or else he types a different answer:
+ 
+         ARE YOU SURE?  YES//
+ 
+The same "prompt" syntax is used when a particular question is being answered
+"for the second time", in edit mode.  (Generally, the user gets to edit a
+piece of data following the same "route" he took to enter the data in the
+first place).  The system prompts the answer previously entered, and the user
+either leaves it unchanged by pressing 'RETURN', or replaces the answer with a
+newly-typed response:
+ 
+         SSN: 123123124// 123123123
+ 
+In this example (user response underlined), "123123123" will now replace
+"123123124" as the answer to the question "SSN".
+ 
+Sometimes, if the data on file is a long string of text, the user will be
+allowed simply to change selected characters of that text, rather than having
+to re-type the whole string.  If the system displays an "old" answer, and then
+asks "Replace", one can enter just the characters which one wishes to change.
+To replace the entire text, one types 3 dots (...).  For example:
+ 
+         NAME: JOHN JACOB JINGLEHAEMER SMITH
+              Replace AE  With EI  Replace  
+         JOHN JACOB JINGLEHEIMER SMITH
+ 
+The 3-dot syntax may also be used to mean starting from a set of characters up
+to the end of the text as in:
+ 
+         NAME: JOHN JACOB JINGLEHAEMER SMITH
+              Replace AE...  With EIMER  Replace
+         JOHN JACOB JINGLEHEIMER
+ 
+When the user wants to delete an answer previously entered, without
+substituting any other answer for it, he returns to that question, and answers
+it with an "@" character:
+ 
+         DOB: 12-30-44// @
+ 
+In this example, the date on file has been erased, and there remains no answer
+to the "DOB" question.
+ 
+The user can "opt out" of answering any question by typing the "up-arrow"
+character:
+ 
+         SSN: 123123123// ^
+ 
+Here, the "123123123" answer would remain unchanged, but the current series of
+questions would be terminated.
+ 
+If the user wishes to be asked a question in the current series other than the
+one that the system is currently asking him, he "answers" with an up-arrow (^)
+followed by the caption of the question he wishes to be asked instead:
+ 
+         SSN: 123123123// ^ADDRESS
+ 
+Here, again, the "SSN" answer remains, and the system then asks
+ 
+         ADDRESS:
+ 
+(assuming such a question exists).  Unambiguous partial spelling of the "^" -
+transfer caption would also have been acceptable, e.g.,
+ 
+         SSN: 123123123// ^ADD
+ 
+When, as in the previous example, the user is effectively designating one of a
+set of answer choices, he can save keystrokes by not typing the full answer.
+If the characters typed uniquely identify one of the possible acceptable
+answers, the system will "echo back" the remaining characters of the answer:
+ 
+         SSN: 123123123// ^ADDRESS
+ 
+Sometimes, such a "partial answer" won't be specific enough, because two or
+more acceptable answers begin with the same character(s) that the user typed.
+In such a case, the system will display the two choices (or more, up to the
+first five), and ask the user to choose between them, by number:
+ 
+         OPTION: S
+             1 SEARCH FILE ENTRIES
+             2 STATISTICS
+         CHOOSE 1-2: 1
+ 
+Here, the answer ends up being "SEARCH FILE ENTRIES".
+ 
+If the user wants help from the system in answering a question that has been
+asked, he can "answer" with a question mark.  The system will then display an
+explanatory message, and re-ask the question.  If the acceptable answer to the
+question is one of a set of choices, and if that set of choices is short
+enough to be displayed on 5 or 6 lines, the system will list all the choices
+in the explanatory message.  Example:
+ 
+         Select PATIENT NAME: ?
+           ANSWER WITH PATIENT NAME, OR SSN
+         CHOOSE FROM:
+           ADAMS,JOHN          SMITH,SAM
+           BROWN,SANDRA        WAYNE,JOHN
+           DOE,JOE
+         ANSWER MUST BE 3-30 CHARACTERS IN LENGTH
+         Select PATIENT NAME:
+ 
+In such a case, if you know the list is long, and still want it to be
+displayed, you can enter two question marks, rather than one, to force the
+display.
+ 
+Whenever the user types a "?" and the entry list is long, FileMan will ask the
+user if he wishes to see all the entries.  Instead of a YES or NO response, he
+may enter an "^" followed by an entry name (e.g. ^JONES) to see a list of all
+entries starting with that entry.  Optionally, the user may enter an "^"
+followed by a number to see all entries starting after that internal entry
+number.  The latter will work even if the file is not normally referenced by
+the internal entry number (.001 field).  The example below shows selection of
+an entry starting with an alpha character.
+ 
+Select PATIENT NAME: ?
+  ANSWER WITH PATIENT NAME, OR SSN
+  DO YOU WANT THE ENTIRE 1890-ENTRY PATIENT LIST? ^S
+CHOOSE FROM:
+    SAINT,JOSEPH
+    SALTER,PAUL
+    SANCHEZ,JOSE
+    SAMSON,JOHN
+    '^' TO STOP ^
+  YOU MAY ENTER A NEW PATIENT, IF YOU WISH
+  NAME MUST BE 3-30 CHARACTERS IN LENGTH
+Select PATIENT NAME:
+ 
+If the acceptable answer to a question is a date, any of the following
+answer formats is allowed:
+ 
+         JULY 20, 1969
+         7/20/69 (any delimiting punctuation allowed)
+         20JUL 69
+         072069
+         T (today)
+         T+1 (tomorrow)
+         T-7 (one week ago)
+         T+3W (3 weeks hence)
+ 
+The year portion of the date can be left off; normally, the system will assume
+the current year.  In certain circumstances, the system will allow "imprecise"
+dates to be input, such as:
+ 
+         JUL '69    or    1969
+ 
+Occasionally, the machine will allow the user to enter a time-of-day in
+connection with a date, as for example "4:00 PM on July 20, 1969".  To do
+this, one types the date in one of the above forms, followed by an "at" sign
+(@), followed by the time; e.g.,
+ 
+         20 JUL 69@4PM
+ 
+In this mode, one can enter time either as military (4-digit) time, hour
+AM/PM, or hour:minute AM/PM,  or simply "NOW" for the current date/time.  The
+colon (:) can be omitted, and AM/PM may also be omitted if the time being
+entered is after 6AM and before 6PM.  Thus, "today at 3:30 PM" may be entered
+as:
+ 
+         T@330
+ 
+In certain circumstances, the user may want to answer a machine-generated
+query with a code meaning "the same as before".  For example, if he leaves one
+type of data entry routine on a given patient, and enters another type of
+routine to deal with the same patient, he can usually answer "PATIENT ID:"
+with a single space character, to mean "the same patient as before".
+ 
+VA FileMan  V.17 - Apr 1986                         User's Manual        (3)
+
+
+
+
+                  III. GETTING STARTED
+
+ 
+ 
+
+ 
+Before any user program is run, the 'DINIT' routine must be invoked to
+initialize FileMan (see FileMan Programmer's Manual).  It only needs to be
+run once, although it is non-destructive if run a second time.
+ 
+The user programs are available from an option reader routine, 'DI', which
+offers nine choices.  Here is a list of the options, plus chapters in this
+manual where explanations of them can be found:
+ 
+     1.  ENTER OR EDIT FILE ENTRIES         VI
+     2.  PRINT FILE ENTRIES                 IV
+     3.  SEARCH FILE ENTRIES                V
+     4.  MODIFY FILE ATTRIBUTES             VII
+     5.  INQUIRE TO FILE ENTRIES            IV
+     6.  UTILITY FUNCTIONS                  VIII
+     7.  STATISTICS                         IV
+     8.  LIST FILE ATTRIBUTES               III (below)
+     9.  TRANSFER ENTRIES                   XI
+ 
+Assuming that you want to work with a File that already exists, the first
+thing to do is call the List File Attributes Option to get a listing of all
+the Attribute Fields of that File.  For example, suppose that a File
+of Patients has been defined.  To get the "Data Dictionary" for this File, we
+go through the following dialogue (the underlined characters being the ones
+the user types):
+ 
+Select OPTION: LIST FILE ATTRIBUTES
+OUTPUT FROM WHAT FILE: ?   (Remember the '?', when you don't know
+                         what to do next)
+CHOOSE FROM:
+    2    PATIENT   (12/2/76  32 Entries)
+    3    EMPLOYEE   (8/3/77   47 Entries)
+    13   RELIGION   (12/1/76  30 Entries)
+              (the dates tell when each File was first created)
+OUTPUT FROM WHAT FILE: 2   PATIENT  (1890 entries)
+Select SUB-FILE:     (never mind about this now; just press 'RETURN')
+Select LISTING FORMAT: STANDARD// BRIEF
+ALPHABETICALLY BY LABEL? YES// N (NO)
+ 
+Now a listing will be produced; the BRIEF format will be more readable than
+the STANDARD listing that we chose not to see.  The next page shows a sample
+BRIEF listing of an elementary Patient File.
+ 
+VA FileMan  V.17 - Apr 1986                        User's Manual        (4)
+
+
+
+
+
+ 
+DATA DICTIONARY #2 -- PATIENT FILE                3/20/86     PAGE 1
+----------------------------------------------------------------------------
+ 
+NAME          2,.01     FREE TEXT
+NAME MUST BE 3-30 CHARACTERS, NOT NUMERIC OR STARTING WITH PUNCTUATION
+ 
+SEX           2,1       SET   'M' FOR MALE;  'F' FOR FEMALE
+ 
+DOB           2,2       DATE    BETWEEN 1/1/1860 AND 1963
+ 
+RELIGION      2,3       POINTER TO RELIGION FILE (#13)
+ 
+DIAGNOSIS     2,4         2.01      Multiple
+ 
+     DIAGNOSIS2.01,.01  FREE TEXT
+                          ANSWER MUST BE 3-30 CHARACTERS IN LENGTH
+ 
+     AGE AT ONSET2.01,1 NUMBER      BETWEEN 0 AND 120
+ 
+     HISTORY  2.01,2      2.02   WORD-PROCESSING
+ 
+ 
+This listing tells us that each of the patients now on File has a name of from
+3 to 30 characters, and each should also have a sex of either 'M' or 'F'.  In
+addition, each may have a Date of Birth and a Religion (for a list of all
+"valid" religions, we'd have to consult the "Religion" File).  Furthermore,
+each patient may have one or more diagnoses, and for each diagnosis an Age
+at Onset and a "history".  Thus 'DIAGNOSIS' is one of those "multiple-valued"
+Attributes we mentioned in Chapter I.
+ 
+The next page shows a listing in MODIFIED STANDARD format.  It allows
+suppressing the MUMPS code and listing of files that belong to GROUPS.
+ 
+Select LISTING FORMAT: STANDARD// MODIFIED STANDARD
+WANT THE LISTING TO INCLUDE MUMPS CODE? YES// N  (NO)
+WANT TO RESTRICT LISTING TO CERTAIN GROUPS OF FIELDS? NO//   (NO)
+ 
+VA FileMan  V.17 - Apr 1986                          User's Manual        (5)
+
+
+
+
+
+ 
+DATA DICTIONARY #2 -- PATIENT FILE    3/20/86       PAGE 1
+STORED IN ^DPT(   (1890 ENTRIES)
+ 
+DATANAME GLOBALDESCRIPTION
+ELEMENTLOCATION
+------------------------------------------------------------------------------
+ 
+CROSS-REFERENCED BY: NAME(B)
+ 
+2,.01NAME0;1FREE TEXT
+       NAME MUST BE 3-30 CHARACTERS, NOT NUMERIC OR STARTING WITH PUNCTUATION
+                   (Required)
+                   CROSS-REFERENCE: 2^B
+ 
+2,1 SEX  0;2       SET ; 'M' FOR MALE ; 'F' FOR FEMALE 
+ 
+2,2 DOB  0;3  DATE   TYPE A DATE BETWEEN 1/1/1860 AND 1963   
+ 
+2,3 RELIGION0;4POINTER TO RELIGION FILE (#13)
+ 
+2,4 DIAGNOSIS1;02.01(Add New Entry without Asking)  Multiple
+ 
+2.01,.01  DIAGNOSIS 
+         0;1  FREE TEXT 
+               ANSWER MUST BE 3-30 CHARACTERS IN LENGTH
+              (Multiply asked)
+                  CROSS-REFERENCE: 2.01^B
+ 
+2.01,1  AGE AT ONSE@ @   └                                                               H     
+    ╤=Id─∞└╚╕└╚ÇÇü]=I ╡AI=
+ MM%9 4(Ç4(Ç4(ÇÇÇÇü %1 LüA=%9Q  üQ= % 1 L4(Ç4)I 1% %=8ü %1 Çáî─╠ñÇÇÇÇÇÇüI 1% %=8Çáî╠ñ4(Ç4(Ç4(Ç4)%╕üàææÑ╤Ñ╜╕ü╤╝ü╤íöüMQ 9  I ░ü	I%  ░ is also in the form of a File, and hence
+consists of Entries, Cross-references, Descriptor, and a reference to the
+"zeroth" Data Dictionary (^DD(0)) which is a dictionary of the Attributes of
+Attributes.  For the most part, FileMan "packs" data into subscripts using the
+"^" ("up-arrow") character as the "$PIECE" delimiter.  Thus, we will refer to a
+Data Element as being stored in such-and-such "^"-piece of a global node.  Each
+Entry in the Attribute Dictionary is a descriptor of one of the Data Fields
+pertaining to Entries in the main File.  The system always assigns the Internal
+Number ".01" to the Name Field, and lets the user assign numbers to the other
+Data Attributes as he sees fit.  In our example the patient file has three other
+elements; Sex, Birthdate, and Diagnosis; and that Diagnosis is multiple valued.
+Let us suppose that the Attribute Dictionary for this File is stored in ^DD(2).
+In this File, an Entry Name is always found as the first "^"-piece in subscript
+zero, so we would have:
+ 
+         ^DD(2,.01,0)="NAME^"     
+         ^DD(2,1,0)="SEX^"     
+         ^DD(2,2,0)="DOB^"     
+         ^DD(2,3,0)="DIAGNOSIS^"     
+ 
+The rest of the zeroth subscript for any Field consists of:
+ 
+"^"-piece #2: a string containing
+ 
+    
+      
+     "BC"       if the Data is true-false ("Boolean") "computed"
+     "C"        if the Data is "computed"
+     "Cm"       if the Data is multi-line "computed"
+     "D"        if the Data is date-valued
+     "DC"       if the Data is date-valued "computed"
+     "F"        if the Data is free-text
+     "I"        if the Data is "uneditable" (Utility Option 9)
+     "J"n       to specify a print length of "n" characters
+     "J"n","d"  to specify printing "n" characters with "d" decimals
+     "N"        if the Data is numeric-valued
+     "O"        if the field has an output transform
+     "P"n       if the Data is a "pointer" reference to File 'n'
+     "P"n"'"    if LAYGO to the pointed to file is not allowed
+     "P"n"*"    if the pointer field is defined to have a "screen"
+     "R"        if the Data is "required" (can't skip input)
+     "S"        if the Data is from a discrete "set"
+     "W"        if the Data is "Word-Processing"
+     "WL"       if the Data is "Word-Processing" which is normally
+          	printed in "line-mode"
+     "X"        if the syntax-check has been modified under the
+          	Utility Option
+      
+     
+     This "^"-piece begins with a numeric if the data is multiple-valued.
+ 
+"^"-piece 3:   either the global "pointer" reference if the data type
+              is "P", or the "set" of allowed "responses" and their 
+              meanings, if the data type is "S", or nothing.
+ 
+"^"-piece 4:   subscript location and "^"-piece, separated by a ";", or
+              subscript location and character-positions, also separated
+              by a ";" where "Em,n" designates character positions m thru
+              n, or subscript location, followed by ";", followed by zero,
+              to designate multiple-valued data.
+ 
+"^"-piece #5:  MUMPS code to check an input in the variable 'X'.  'X' is
+              killed by the code if input is invalid.  In the case of a
+              "computed" Field, the code creating the variable 'X' is
+              stored here.
+ 
+Subscript #0.1 (at the third level), if it exists, contains the full-length
+"Title".
+ 
+Subscript #1, if it exists, contains, at lower subscript levels, Executable 
+MUMPS code to create and kill cross-references based on the value of the Field 
+(in the variable 'X').
+ 
+Subscript #2, if it exists, contains the "output transform" --MUMPS code to
+display the Field value in a format differently from the way in which it is
+stored (See Chapter V.G).
+ 
+Subscript #3, if it exists, contains a prompting message to be displayed when 
+the user types "?".
+ 
+Subscript #4, if it exists, contains MUMPS code that will be executed in 
+addition to displaying the "canned" prompt when the user types "?".
+ 
+Subscript #5, if it exists, contains, at lower subscript levels, pointers to
+"Trigger" Cross-references to this Field.
+ 
+Subscript #8, if it exists, is the "Read Access" for the Field.
+ 
+Subscript #8.5, if it exists, is the "Delete Access" for the Field.
+ 
+Subscript #9, if it exists, is the "Write Access" for the Field.
+ 
+Subscripts #9.2 thru #9.9, if they exist, are the 'overflow' Xecutable MUMPS 
+code that may be part of the specification of a "Computed"-type field.
+ 
+Finally, a programmer can set the "DEL" subscript for the .01 (NAME) field to a
+string of Xecutable MUMPS code that will determine if the entry can be deleted.
+It must contain a MUMPS "IF" command to set the value of "$T".  If "$T" is set 
+to "1", the entry can not be deleted.  Normally, the ^DD format is:
+ 
+    ^DD(File #,.01,"DEL",field number,0)="executable MUMPS code"
+ 
+where field number is the field to be tested by the MUMPS code to determine if
+deletion is allowed.
+ 
+Thus, for our example:
+ 
+    ^DD(2,.01,0)="NAME^FR^^0;1^I X'?1A.AP1",".AP K X"
+    ^DD(2,.01,.1)="PATIENT'S NAME"
+    ^DD(2,.01,1,1,0)="2^B"
+    ^DD(2,.01,1,1,1)="S ^DPT("B",$E(X,1,30),DA)="""
+    ^DD(2,.01,1,1,2)="K ^DPT("B",$E(X,1,30),DA)"
+    ^DD(2,.01,3,1)="TYPE NAME IN THE FORMAT: LAST,FIRST"
+    ^DD(2,1,0)="SEX^RS^M:MALE;F:FEMALE^0;2^Q"
+    ^DD(2,2,0)="DOB^D^^0;3^S %DT="EX" D ^%DT S X=Y I X<1400000!(X>2770000) K X"
+    ^DD(2,2,.1)="DATE OF BIRTH"
+ 
+can be translated into the following words:     
+ 
+The first Field is NAME ("PATIENT'S NAME", in the long form).  It is a free-text
+Datum which must consist of at least 1 alpha, followed by other alpha and
+punctuation characters & containing a comma.  It is always required from the
+user, and is stored in subscript 0, "^"-piece 1, of each Patient's File.  If the
+user types a "?" when asked for the Name, he will see:
+ 
+              TYPE NAME IN THE FORMAT: LAST,FIRST     
+ 
+The Patient File is Cross-referenced by Name, so that every time a Name is
+changed, the corresponding subscript under ^DPT("B") is also changed.  'DA' will
+always be the Internal Number of the patient when the Cross-referencing code is
+executed.  If a second Cross-reference for 'Name' existed (for example, a
+"trigger"), it would be descendant from
+ 
+              ^DD(2,.01,1,2
+ 
+The second Field is SEX.  It is stored as either "M" or "F" in the 2nd "^"-piece
+position of subscript 0 of each Patient File.  The user is required to enter it,
+and can type "MALE" instead of "M", and "FEMALE" instead of "F".  He will see 
+the two choices displayed if he types a "?" when asked for Sex.
+ 
+The third Field is DOB (full title: "DATE OF BIRTH"), which, if it is entered 
+(it is not required), must be in the format of a date somewhere between 1840 and
+1977.  It is stored in the 3rd "^"-piece of subscript 0 of the File.
+ 
+A multiple-valued Field like "Diagnosis" (see Chapter I of the User's Manual) is
+described by a separate Data Dictionary.  FileMan creates this new Data
+Dictionary descendant from a non-integer subscript of ^DD.  In the case of the
+patient File described by ^DD(2), it would store "subsidiary" Data Dictionaries
+in ^DD(2.01), ^DD(2.02), etc.  The subsidiary Data Dictionary for the multiple-
+valued "diagnosis" Field could look like this:
+ 
+         ^DD(2.01,0)="DIAGNOSIS SUB-FIELD^NL^.01^1"     
+         ^DD(2.01,.01,0)="DIAGNOSIS^MF^^0;1^K:$L(X)>30!($L(X)<3) X"     
+         ^DD(2.01,.01,3)="ANSWER MUST BE BETWEEN 3 TO 30 CHARACTERS IN LENGTH"     
+ 
+The only new element here is the "M" in the second '^'-piece of ^DD(2.01,.01,0).
+This is the flag corresponding to the 'YES' answer to the question:
+ 
+    HAVING ENTERED OR EDITED ONE DIAGNOSIS, SHOULD USER BE ASKED ANOTHER?
+ 
+It says that the Diagnosis Field should be "multiply-asked", until the user hits
+<null> to the
+ 
+         DIAGNOSIS:     
+ 
+query on a patient.
+ 
+There will also be an Entry corresponding to Diagnosis in the "principal" 
+patient Data Dictionary:
+ 
+    ^DD(2,3,0)="DIAGNOSIS^2.01A^^DX;0"
+ 
+The "2.01" here points off to the subsidiary Data Dictionary of that number; it
+says that, to find the data descriptors of Diagnosis (and all Fields pertaining
+to Diagnosis, e.g., Age at Onset), we must look in ^DD(2.01).  The "A" tells us
+that everytime the user enters a new diagnosis, it will be Automatically added 
+to the file and he will not be asked
+ 
+         ARE YOU ADDING A NEW DIAGNOSIS?     
+ 
+The "DX;0" in the fourth '^'-piece tells us that the entire Diagnosis sub-File
+will be stored descendant from the "DX" subscript in each patient's record.
+ 
+ 
+VA FileMan  V.17 - Apr 1986                       Programmer's Manual  (4)
+
+
+
+
+                     IV.  PROGRAMMER ROUTINES
+ 
+ 
+Certain modules within FileMan are callable by other MUMPS routines.  The
+programmer of such routines must keep in mind the variable-naming conventions
+listed above.  If he has his own local variables that he wishes to be
+preserved by a call to any of the routines described here, he should be sure
+to give them multi-character names beginning with letters other than 'D'.
+ 
+ 
+A.  FILE LOOKUP PROGRAM -- "DIC"
+ 
+This routine searches a global file name specified by the variable 'DIC' and
+returns the variable 'Y' either as:
+ 
+         Y=-1    if the input is not found, or else
+         Y=N^S   where 'N' is the Internal Entry Number, and
+                 'S' is the full Entry Name.
+ 
+The variable 'DIC' must be defined prior to invoking the "DIC" routine.  The
+variable  'DIC' must be either the File number (integer or fractional), or
+else an explicit global reference in the form "^GLOBAL(" or "^GLOBAL(X,Y,".
+ 
+The routine "DIC" always creates the variable 'U', and leaves it defined as
+the single-character string "^" (up-arrow) upon return.  Except for the
+'DIC("W")' variable (see below), which is killed, the 'DIC' array is left
+unchanged by the "DIC" routine.
+ 
+The variable 'DIC(0)' must also be defined as a string of alphabetic
+characters according to the following:
+ 
+If the variable 'DIC(0)' contains the character "A", the program asks for
+input from the terminal and re-asks in case of erroneous input other than
+<null> or a string containing the up-arrow ("^").  This input 'X' is returned
+when "DIC" quits.  If, however, 'DIC(0)' does not contain the character "A",
+the input to the "DIC" program will be assumed to be in the local variable
+'X'.  If 'DIC("A")' is defined, it will be displayed prior to the reading of
+the 'X' input; otherwise the name of the File ($P(^GLOBAL(0),"^",1)) followed
+by a space, the 'Label' of the .01 field then a colon will be displayed.  If
+the File Name is the same as the 'Label' of the .01 field, then only the File
+Name will be displayed.  Also, if 'DIC(0)' contains "A" and 'DIC("B")' is
+defined and is non-null, the value of 'DIC("B")' will be prompted as the
+default answer, and, in this case, if the terminal user enters just "escape",
+the 'DIC("B")' default value will be used, and returned in 'X'.  If the
+numeric-valued variable 'DTIME' is defined, terminal input will "time out"
+after 'DTIME' seconds if the user hasn't finished responding; in case of such
+a termination, the "DIC" routine will return with 'Y' equal to "-1" and 'X'
+equal to "^" (as though the user had typed "^"), and with the variable 'DTOUT'
+defined equal to '1'.
+ 
+If 'DIC(0)' contains "E", the File Entry names that match the input will be
+echoed back to the terminal, and if there is more than one such name, the user
+will be asked to choose which Entry he wants.
+ 
+If 'DIC(0)' contains "Q", and if erroneous input other than <null> or up-arrow
+is entered, "??" will be displayed, and the bell rung.
+ 
+If 'DIC(0)' contains "X", for "exact match", the input value must be found
+exactly.  Otherwise, the routine will look for any Entries which begin with
+the input 'X'.  Unless "X-act match" is specified, lower-case input that fails
+in the lookup will automatically be converted to upper-case, for a second
+lookup attempt.
+ 
+If 'DIC(0)' contains "L", then "DIC" will allow the user to add a new Entry to
+the File at this point ("Learn-As-You-Go"), as long as at least one of four
+security-check conditions apply:
+   
+     
+    1. The File has no "LAYGO Access Code"
+    
+    2. The local variable 'DUZ(0)' is equal to "@"
+    
+    3. Some character in 'DUZ(0)' can be found in the file's "LAYGO Access Code"
+    
+    4. The variable 'DLAYGO' is defined equal to the File number.
+    
+ 
+The user's input must, of course, be in valid format for an Entry Name, and he
+must respond with "Y" to the question
+ 
+         ARE YOU ADDING A NEW ENTRY?
+ 
+If such a new entry is indeed made in the invoking of "DIC", the variable 'Y'
+will be returned to the calling program as:
+ 
+         N^S^1
+ 
+where 'N' is the Internal Entry Number and 'S' the Entry Name, and "1" is the
+literal character "1".
+ 
+Normally, "DIC" does its lookup using the "B"-node cross-reference of the File
+(see Chapter III.B., above).  The "B" cross-reference may include "MNEMONIC"
+cross-references to a field other than the .01 field, as indicated in Chapter
+VIII.B. of the User's Manual.  Suppose that "MAIDEN NAME" is, as in the
+example given there, a "MNEMONIC" cross-reference.  Then a patient whose
+MAIDEN NAME is "DAVIS" will be found by "DIC" in the "B" cross-reference if
+the user types "DAVIS".  However, if her "real" (married) name were
+"DAVIDSON", her married name only would be displayed.  This "cross-reference
+suppression" can be overridden by including a "C" in the "DIC(0)" string.
+ 
+If 'DIC(0)' contains "M", "DIC" will do a "multi-lookup" on all of the File's
+cross-reference indices, from "B" on to the end of the alphabet.  Thus, for
+example, if a given File is indexed both by Name and by Social Security
+Number, and the user inputs "123-45-6789", "DIC", failing to find this input
+as a "Name", will automatically go on to look it up as a Social Security
+Number.
+ 
+If 'DIC(0)' contains "N", the input is allowed to be a File Entry Number, even
+if the File in question isn't normally referenced by Number.  If 'DIC(0)' does
+not contain an "N", the user is still allowed to select by File Entry Number
+by preceding the number with the "`" (accent grave) character.
+ 
+If 'DIC(0)' contains "Z" and if the lookup is successful (i.e., the variable
+'Y' is returned as something other than "-1"), then the variable 'Y(0)' will
+also be returned.  It will be set equal to the entire "zeroeth node" of the
+Entry that has been found.  To use the example on Chapter III.B., if the
+programmer writes:
+ 
+         SET DIC="^DPT(",DIC(0)="QEZ",X="SMITH" DO ^DIC
+ 
+he will get back:
+ 
+         Y="7^SMITH,SAM"
+         Y(0)="SMITH,SAM^M^2231109"
+ 
+Also,the "Z" parameter forces the "naked reference" to be set at the level of
+this "zeroeth node", so the calling program can easily make reference to some
+other node at the same level.  (Not a recommended practice)
+ 
+A valuable feature of the "DIC" routine is that, if an entry is found, its
+number gets saved in the global "^DISV".  To be precise, "^DISV($I,DIC)" gets
+set equal to the entry number.  This allows the terminal user to do a
+subsequent lookup of the same entry at the same terminal simply by hitting the
+"space bar".  The cost of this feature, of course, is the time required to set
+the global.  If the programmer invoking "DIC" wishes to be spared this cost,
+he should simply include an "F" in 'DIC(0)', in which case the lookup will not
+set ^DISV($I,DIC).
+ 
+To summarize the 'DIC(0)' options, then:
+         
+           
+          A   =   ASK and (if erroneous) re-ask Entry
+          C   =   CROSS-REFERENCE SUPPRESSION is turned off
+          E   =   ECHO back information
+          F   =   FORGET the lookup value, as far as ^DISV is concerned
+          L   =   LEARNING a new Entry is allowed
+          M   =   MULTI-INDEX lookup allowed
+          N   =   NUMBER allowed
+          Q   =   QUESTION erroneous input (with '??')
+          X   =   Exact match required
+          Z   =   ZEROETH node returned in 'Y(0)'
+          
+ 
+There are a few other "lookup" features available to programmers using 'DIC':
+ 
+1.  If 'DIC("S")' is defined, it will be understood to be a string of
+executable code, which the "DIC" routine will execute to "screen" an Entry
+chosen.  'DIC("S")' must contain a MUMPS 'IF' command to set the value of $T.
+Those Entries for which the 'IF' sets $T=0 will not be displayed or
+selectable.  At the moment the 'DIC("S")' code is executed, the local variable
+'Y' is the Entry number of the Entry being "screened", and the MUMPS "naked
+indicator" is at the global level @DIC"Y,0)".  Therefore, to use the previous
+example again, if we only wanted to find a male patient whose name begins
+with "SMITH", we would have:
+ 
+S DIC="^DPT(",DIC(0)="QEZ",X="SMITH",DIC("S")="I $P(^(0),U,2)=""M""" D ^DIC
+ 
+2.  If 'DIC("W")' is defined as a MUMPS command string, it will be Xecuted
+when 'DIC' displays each of several Entries that match the user's input.  The
+condition of the variable 'Y' and of the naked indicator is as specified in
+the previous paragraph.  If 'DIC("W")' is defined, it will override the
+display of any identifiers of the file.
+ 
+3.  When calling "DIC" with "LAYGO" allowed, you can specify that a certain
+list of Fields will be asked in the case that the user enters a brand-new
+Entry.  This list is specified by setting the variable 'DIC("DR")' equal to a
+string that looks exactly like the 'DR' string of Fields that is specified
+when calling 'DIE' (see next Section).  Such a list of "forced identifiers"
+overrides any Identifiers that would normally be asked for new Entries in
+this File.
+ 
+4.  Note that, if 'DIC(0)' is null, no terminal output will be generated by
+the "DIC" routine.  Otherwise, when the input contains a "?", a prompting
+message (including any output specified by 'DIC("W")') will be displayed.
+ 
+5.  One last feature: normally, as mentioned, 'DIC' does its lookup using the
+"B" cross-reference of the File.  You can make it do a lookup only on
+cross-reference "C", for example, by setting the local variable 'D' equal to
+"C" and entering at 'IX^DIC'.
+ 
+ 
+B.  DATA EDIT PROGRAM -- "DIE"
+ 
+A programmer can call the "Data Entry and Editing" Function of FileMan to
+handle input of selected data elements for a given File Entry.  This is done
+by invoking the routine "DIE".  The program needs three local variables set as
+input parameters (in addition to 'DT' and 'DUZ' -- see Chapter II.D.):
+         
+           
+          DIE   The Global Name of the File in the form "^GLOBAL(" OR
+                ^GLOBAL (X,Y," or else the Number of the File
+           
+          DA    The Internal Entry Number of the File Entry to be Edited
+                ('DA(1)' may also be needed if editing is occurring at a
+                lower level of the File.)
+           
+          DR    A String Specifying which Data Fields will be asked, for the
+                given Entry.
+          
+ 
+The "DR" string consists of either:
+ 
+1.  A single number corresponding to the Internal Number of a Field of the
+File (Remember that the Internal Number of any File's Name Field is .01).
+ 
+or 2.  A Field number as above, followed by "//" (two slashes), followed by
+the default prompt which should be displayed to the user when that Field is
+asked.  For example, if there is a File Entry stored descendant from
+^FILE(777), and Field #27 for this File is "DATE OF ADMISSION", and the
+programmer wishes the user to see:
+ 
+    DATE OF ADMISSION: TODAY//
+ 
+then the calling program should say:
+ 
+    SET DR="27//TODAY",DIE="^FILE(",DA=777 DO ^DIE
+ 
+If the user just hits 'RETURN' when he sees the prompt, "DIE" will act as
+though he had typed in the word "TODAY".  Naturally, if a different 
+admission date were already on file for #777, it would be that date that
+would be displayed after the "//", rather than "TODAY".
+ 
+or 3.  A Field Number followed by "///" (three slashes), followed by a value
+which will be automatically inserted into the database.  In the above
+example, if we had
+ 
+         DR="27///TODAY"
+ 
+the terminal user would see no query, but the current date would automatically
+be "stuffed" into Field 27 of Entry 777, even if other data previously
+existed there.
+ 
+or 4.  A range of Field Numbers, in the form M:N, where M is the First and N
+the Last Number of the Inclusive Range.  All Fields whose Numbers lie within
+this range will be asked.
+ 
+or 5.  A "Place-holder" like "@1" (see below),
+ 
+or 6.  A line of MUMPS code (see below),
+ 
+or 7.  A sequence of any of the above 4 types, separated by semicolons.  If,
+say, Field Numbers .01, 1, 2, 4, 10, 30, and 101 exist for the File stored in
+^FILE, and the programmer wants to have Fields 4, .01, 10, 30, and 101 asked
+(in that order) for Entry Number 777, he simply writes:
+ 
+         SET DIE="^FILE(",DA=777,DR="4;.01;10:999" DO ^DIE
+ 
+and he returns with the appropriate subscripts of ^FILE(777) entered or
+edited.  Note that the 'DR' string contains the semicolon delimiter to specify
+specific field number and the colon to specify a range of fields.
+ 
+or finally 8.  If 'DR' is simply the name of an Input Template, preceded by
+"[" and followed by "]", then all the fields in that Template will be asked.
+ 
+Note that the Fields specified by 'DR' will be asked whether or not FileMan
+"Write Access" security protection has been assigned to the Fields.
+ 
+The programmer can include "branching logic" within 'DR'.  He does this by
+inserting an executable MUMPS statement in one of the "semicolon-pieces" of
+'DR'.  The MUMPS code will be executed when this piece of 'DR' is encountered
+by the "DIE" routine.  If the MUMPS code sets the variable 'Y', "DIE" will
+jump to the Field whose Label (or Number) matches 'Y'.  (The Field must be
+specified elsewhere within the 'DR' variable).  'Y' may look like a
+"place-holder", e.g., "@1".  If 'Y' is set to zero ("0") or to the null string
+(""), "DIE" will exit.  If 'Y' is KILLed, or never set, no branching will
+occur.  The MUMPS code can calculate 'Y' based on 'X', which will at that
+moment be equal to the internal value of the Field previously asked for (as
+specified by the previous "semicolon-piece" of 'DR').  Take the above example,
+and suppose that we don't want the user to be asked for Fields .01 or 10 if
+his answer to Field Number 4 was "YES".  We therefore write:
+ 
+         S DIE="^FILE(",DA=777,DR=1;4;I X=""YES"" S Y=30;.01;10;30;101"
+         DO ^DIE
+ 
+Suppose one of the fields to be edited is a multiple, and you want to edit
+only selected subfields in the multiple.  In the above specifications for the
+'DR' string, all the subfields of the multiple will be asked.  To do this,
+we set 'DR' in the usual manner and in addition we set a subscripted value of
+'DR' equal to the subfields we want to edit.  For example, if field #4 is a
+multiple and the subdictionary number for the multiple is 16001.02.  If we
+want the user to be prompted only for subfields ".01" and "7" then we:
+ 
+         SET DR=".01;4;6;8" 
+         SET DR(2,16001.02)=".01;7"
+ 
+where the first subscript ("2") means the 2nd level and the second subscript
+is the subdictionary number of the multiple field (#4).
+ 
+If there are more than 250 characters in a 'DR' string, the programmer can set
+continuation strings by defining the 'DR' array at the third level.  For
+example, the first continuation node of DR(2,16001.02) would be
+DR(2,16000.02,1), the second would be DR(2,16001.02,2) and so on.
+ 
+'DA', 'DIE', and 'DR' are left intact by "DIE", except that if the Entry is
+killed within "DIE" (which can happen if the user answers "@" when he is
+editing the Entry's name), the variable 'DA' is also killed.
+ 
+The programmer can determine, upon return from "DIE", whether the user exited
+the routine by typing an up-arrow.  If he did so, the subscripted variable 'Y'
+will be defined; if all questions were asked and answered in normal sequence,
+$D(Y) will be zero.
+ 
+The programmer can force the user to answer all questions, with no
+"up-arrowing" allowed.  He does this by setting the variable 'DIE("NO^")'
+equal to some value before invoking '^DIE'.  If 'DIE("NO^") is equal to the
+5-character string "OUTOK", then the user is allowed to enter a simple
+up-arrow ("^"), but not to use the up-arrow to branch to fields out of the
+normal sequence.
+ 
+ 
+C.  DATA PRINT -- "DIP"
+ 
+A programmer can invoke the "File Print" program, "DIP", at the entry point
+"EN1" to display a range of Entries in columnar (or template) format.
+ 
+Input variables must be defined as follows (in addition to 'DUZ' & 'DT'):
+ 
+L        Set L=0 or some string whose numeric value is 0, like "LIST DRUGS".
+         the string can appear to the terminal user in messages like:
+ 
+                   LIST DRUGS BY: NAME//
+ 
+DIC      The Global Name of the File in the usual format.
+ 
+FLDS     The various Fields to be printed, separated by commas, (e.g.,
+         FLDS="NAME,DOB,SEX;C20" or FLDS="[DIQ]") as a user would normally
+         have answered the "PRINT FIELD:" questions within the File Print
+         Option of 'DI'.
+ 
+BY       The name of the "SORT BY" field (or null).  Again, to force answers,
+         separate them with commas (e.g., BY="DIAGNOSIS,DATE OF ONSET").  If
+         one of the "comma-pieces" of the "BY" string is the character "@",
+         the terminal-user will be asked for that "SORT-BY" response.  Thus,
+         if you want to sort by DIAGNOSIS but allow the user to order the
+         Sort within DIAGNOSIS, set BY="DIAGNOSIS,@".
+ 
+FR       The "START WITH:" value of the "SORT BY" field (or null) this
+         variable is undefined, the terminal user will be asked the "START
+         WITH:" question.  Multiple answers can be separated with commas; if
+         you want the terminal user to be asked one of the multiples, use "?"
+         as a place holder for that multiple.  Thus, in the example just
+         above, if we set FR=",?" we will be sorting from the first
+         DIAGNOSIS, but the user will be asked START WITH DATE OF ONSET:
+ 
+TO       The "GO TO:" value of the "SORT BY" field (or null) If this variable
+         is undefined, the terminal user will be asked the "GO TO:" question.
+         Multiple answers can be separated with commas, as above.
+ 
+DHD      The Header desired for the output ("@" if no header desired)
+         Remember the "[TEMPLATE NAME]" syntax for using a Print Template as
+         a header.
+ 
+PG       Starting Page number.  If variable is undefined, "Page 1" will be
+         assumed.
+ 
+DIOEND   A string of MUMPS code which is executed after the printout has
+         finished but before returning to the calling program.
+ 
+Thus, the programmer can call "EN1^DIP" to "pre-answer" some or all of the
+Print Option information that the user normally would enter.  He should note
+that the "^%ZIS" routine will still be invoked by "^DIP" (actually, "^DIP3")
+to determine which device the output should go to.  If "%ZIS" chooses an 'SDP'
+or other such "linear" device, and if multiple copies are desired, the
+programmer can call for them by setting
+ 
+    "DCOPIES" = number (greater than one) of copies desired.
+ 
+All the input variables (except 'DUZ' and 'DT') are killed before "DIP"
+returns to the calling program.
+ 
+ 
+D.  DATA DISPLAY -- "DIQ"
+ 
+Similar to the "DIE" routine, a programmer can call the "File Inquiry"
+program, "DIQ", at the entry point "EN" to display a range of data elements in
+captioned format.  Two local variables must be defined as input parameters:
+ 
+    'DIC' = The Global Name of the File in the usual format
+    'DA'  = The Internal Entry Number of the File Entry to be printed.
+ 
+If, in addition to the above, the variable 'DR' is defined at input, it will
+be understood to name the global subscript or subscripts which are to be
+displayed by "DIQ".  If 'DR' contains a colon (:), the range of subscripts is
+understood to be specified by what precedes and follows the colon; otherwise,
+'DR' is understood to be the literal name of the subscript.  All data Fields
+stored within, and descendant from, the subscript(s) will be displayed, even
+those which normally have "Read Access" security protection.
+ 
+If, for example, Fields .01, 1, 2, and 4 are all stored in the zeroeth global
+node of a particular File's Entries, the programmer can call for the display
+of those Fields, for Entry Number 777, by writing:
+ 
+         SET DIC="^FILE(",DA=777,DR=0 DO EN^DIQ
+ 
+ 
+E.  WORD-PROCESSING FORMATTING AND OUTPUT -- "DIWP"
+ 
+A programmer can call the "DIWP" routine to format and (optionally) output any
+group of text lines.  Before calling "DIWP", the global ^UTILITY($J,"W")
+should be KILLed.  Then, for each text line, "^DIWP" is invoked with the
+following local variables defined:
+ 
+       'X' = the string of text to be added as input to the formatter
+ 
+       'DIWL' = the (integer-valued) left margin for the text
+ 
+       'DIWR' = the (integer-valued) right margin for the text
+ 
+       'DIWF' = a string of 'format control parameters' with effects as follows:
+ 
+If 'DIWF' contains "W", the formatted text will be "written" out to the
+current device, and will not be stored in ^UTILITY($J,"W").  The routine
+"^DIWW" must be invoked after the last 'X' string is input to "^DIWP", so that
+the final line of formatted text can be output.  If 'DIWF' does not contain
+"W", no terminal output will occur, but the formatted text will be accumulated
+in ^UTILITY($J,"W",DIWL).
+ 
+If 'DIWF' contains "C" followed by an integer, 'N', the text will be
+formatted in a "column width" of 'N', thus overriding the value of 'DIWR'.
+ 
+If 'DIWF' contains "D", the text will be formatted "double-spaced".
+ 
+If 'DIWF' contains "I" followed by an integer, 'N', the text will be
+"indented" 'N' columns in from the left margin ('DIWL').
+ 
+If 'DIWF' contains "N", each line will be printed as it appears in
+the text. (No-wrap)
+ 
+If 'DIWF' contains "R", the text will be formatted "right-justified".
+ 
+To summarize the parameters 'DIWF' may contain:
+ 
+    Cn   = text is formatted over a Column width of 'n'
+    D   = Double-space the output
+    In   = Indent 'n' columns from the left margin
+    N   = No wrap; print each line exactly as it appears in the text
+    R   = Right-justify the text over the right margin
+    W   = Write out the formatted text to the current device.
+ 
+The 'X' input strings may contain "|"-windows, as described in the User Manual
+(for example, "|SETTAB(9,23,44)|").  The expressions within the "windows" will
+be processed as long as they are not "context-dependent" (i.e., as long as
+they do not refer symbolically to database Field Names).  Thus, "AUG 14,1986" 
+will cause today's date to be inserted into the formatted text, but "|SSN|" 
+will be printed out as it stands, because it can not be interpreted in context.
+ 
+ 
+F.  FORM DOCUMENT PRINT -- "DIWF"
+ 
+The "DIWF" routine is designed to use the contents of a Word-Processing field
+as a "target document" into which data will be inserted at print time.  The
+data may come from another FileMan file or provided by the user interactively
+at the time the document is printed.  A File containing a Word-Processing type
+field is first selected, and then an Entry in that File.  The Word-Processing
+text in that Entry is then used as a "Form" with which to print output from
+any other File.
+ 
+The Word-Processing text used will typically include "windows" into which data
+from the target file automatically gets inserted by "DIWF".  The "window"
+delimiter is the vertical bar ("|").  Thus, if a Word-Processing document
+contains "|NAME|" somewhere within it, "DIWF" will try to pick the NAME field
+(if there is one) out of the file being printed.  Any non-multiple Field
+Label or Computed-Field expression can be used within a "|" window.  If
+ 
+    1)  an expression within the "|" window cannot be evaluated, and
+ 
+    2)  the output of "DIWF" is being sent to a different terminal than
+        the one used to call up the output,
+ 
+then the user will be asked to type in a value for the window, for each data
+entry printed.  Thus, the Word-Processing text used as a "target document"
+might include the window "|SALUTATION|", where SALUTATION is not a valid field
+name in the source file.  When "DIWF" encounters this window, and failing to
+find a "SALUTATION" field in the source file, it will ask the user to enter
+"SALUTATION" text which then immediately gets incorporated into the output in
+place of that "window".  Note that we are referring to two Files - the
+"document" file which contains the word-processing text and the "print from"
+file which "DIWF" will use to try to "fill-in" data for the windows.
+ 
+Invoking "DIWF" at the top (i.e. DO ^DIWF) will result is the following
+dialogue:
+    
+    Select Document File: FORM LETTER  (a File with a W-P type field)
+    Select DOCUMENT: APPOINTMENT REMINDER  (an entry in the FORM LETTER File)
+    Print from what FILE: PATIENT
+    WANT EACH ENTRY ON A SEPARATE PAGE? YES//
+    SORT BY: NAME// FOLLOWUP DATE=MAY 1, 1986
+    DEVICE:
+ 
+In this example, the Word-Processing text found in the APPOINTMENT REMINDER
+Entry of the FORM LETTER file is used to print a sheet of output for each
+Entry in the PATIENT File whose FOLLOWUP DATE equals May 1, 1986.
+ 
+If the "Document File" contains a Pointer field pointing to File #1, and if
+the document entry selected has a value for that Pointer, then the File
+pointed to will be automatically used to "print from" and the user will not be
+asked "Print from what FILE:".
+ 
+Note that the READ ACCESS is checked by DIWF for both files selected.
+ 
+A programmer can invoke "DIWF" at two other entry points to pre-answer some or
+all of the questions normally asked of the user.
+ 
+EN1       This entry point is used when the calling program knows which File
+         ("document file") contains the desired Word-Processing text to be
+         used as a "target document".  If "DIWF" is entered at "EN1", the
+         variable 'DIC' should be defined in its customary way -- that is, it
+         identifies a file either by its file number or its global name
+         "root".  (e.g. DIC=16001 or DIC="^DIZ(16001,").
+ 
+         The file identified must contain a Word-Processing field.  The user
+         will then be branched to "Select DOCUMENT: " in the dialogue
+         described above to select a particular entry in the document file.
+ 
+EN2       This entry point is used when the calling program knows both the
+         "document" File and the Entry within that file which contains the
+         desired Word-Processing text to be used as a "target document".  If
+         "DIWF" is entered at "EN2", the variable 'DIWF' must be defined as
+         naming the global "root" at which the desired text is stored.  Thus,
+         in our example, if "APPOINTMENT REMINDER" is the third document in
+         the FORM LETTER file (stored in "^DIZ(16001,") and that the word
+         processing field is stored in subscript "1", we can:
+ 
+                   SET DIWF="^DIZ(16001,3,1,"
+ 
+         "DIWF" will then automatically use this entry and the user will not
+         be asked to select the document file and which document in that
+         file.
+ 
+If the calling program wants to specify which file should be used to "print
+from" for generating output, the number of that file should appear in the
+variable 'DIWF(1)'.  Otherwise, the user will be asked the "Print from what
+FILE:" question.  After this point, "EN1^DIP" is invoked; the calling program
+can set the usual 'BY', 'FR', and 'TO' variables if it wants to control the
+SORT sequence of the data file.
+ 
+ 
+G.  FILE RE-INDEXING AND ENTRY DELETION -- "DIK"
+ 
+A programmer can call the routine "DIK" at several entry points to delete
+entries from a file or re-index the file.
+ 
+To delete an entry from a file set the variable 'DIK' to a global reference
+analogous to 'DIC' in the file lookup routine (^DIC) and the variable 'DA' to
+the entry number you wish to delete then call "^DIK".  This will delete the
+internal entry number 'DA' from the file specified by 'DIK'.  Thus, to delete
+SAM SMITH from the Patient file in the example in Chapter III.B., the
+programmer can write:
+ 
+    SET DIK="^DPT(",DA=7 DO ^DIK
+ 
+The variable 'DA(1)' will also be needed if deletion will occur at a lower
+level of the file.  In this case, 'DIK' must be set to the "root" of the
+global node at that level.  Returning to the rudimentary Patient file in
+Chapter III, we see that patient JOHN JONES has two diagnoses on file.  To
+delete the second diagnoses ("ANGINA") we would write:
+    
+    SET DA(1)=1,DA=2,DIK="^DPT(" DA(1) ",""DX""," DO ^DIK
+ 
+where 'DA' is the diagnosis entry number in the sub-file and DA(1) is the
+patient's internal entry in the Patient file.
+ 
+Recall that in Chapter III, Section D we mentioned that each attribute
+dictionary is also in the form of a file.  We can therefore use the routine
+"DIK" to delete a single-valued field from a file.  To do this, the variable
+'DIK' is set to the file's Data Dictionary global node, 'DA' is set to the
+number of the field to be deleted and 'DA(1)' is set to the File number.
+Thus, to delete the field "SEX" from our Patient file example, one could
+simply write:
+ 
+    SET DIK="^DD(2,",DA=1,DA(1)=2 DO ^DIK
+ 
+The routine "DIK" leaves the 'DA' array and 'DIK' defined.  One can therefore
+loop through the file to delete several entries (or fields) as in:
+ 
+    SET DIK="^DPT(" F DA=2,9,11 DO ^DIK
+ 
+This will delete entries 2, 9 and 11 from the patient file.
+ 
+Using the routine "DIK" to delete entries should be used with extreme caution.
+It does not check "Delete Access" for the file nor does it update any pointers
+to the deleted entries.  When used to delete fields from a file, the data is
+also not deleted.  However, it does execute all cross-references and triggers.
+ 
+Two other entry points to the routine "DIK" can be used to re-index a file,
+they are:
+ 
+IXALL^DIK     will crossreference all indices for all entries in the
+              file named by 'DIK'.  The variable 'DIK', as above, should be
+              set to the file global reference.
+ 
+IX1^DIK       will crossreference all indices of the file named by 'DIK'
+              but only for the entry named in the variable 'DA' which should
+              be set to the internal entry number of the entry you wish to
+              crossreference.  Only set logic will be executed.
+ 
+ 
+H.  DATE CONVERSION -- "%DT"
+ 
+%DT is used to validate date/time input and convert it to a conventional
+storage format: "YYYMMDD.HHMM", where
+ 
+    YYY is number of years since 1700 (hence always 3 digits)
+    MM is month number (00-12)
+    DD is day number (00-31)
+    HH is hour number (00-23)
+    MM is minute number (01-59).
+ 
+It is to be noted that this format allows for representation of "imprecise"
+dates like "JULY '78"  or  "1978"  (which would be equivalent to 2780700 &
+2780000 respectively), and that it is always returned as a canonic number
+(no trailing fractional zeroes).
+ 
+The input value to "%DT" (if any) is in the local variable 'X'.  The output is
+in 'Y' (which is returned as "-1" if the input is invalid).  A variable named
+%DT is used to direct the input and conversion of dates.
+ 
+CODE     VALUE
+ 
+ A       Ask for date input
+ E       Echo the answer
+ F       Future dates are assumed
+ N       Pure numeric input (e.g., "121177") is not allowed
+ P       Past dates are assumed
+ R       Require time input
+ T       Time input is allowed but not required
+ X       Exact date (with month and day) is required
+ 
+  Examples:
+ 
+S %DT="",X="T" D ^%DT S DT=Y ;sets DT equal to today's date
+ 
+S %DT="AEPT" D ^%DT G OUT:Y<0 ;asks for a date with optional time
+ 
+Imprecise dates (without a day or month) may be entered unless %DT contains
+"X".  Time input is allowed when %DT contains "T".  To require a time input,
+%DT must contain "R"; the parameter "T" only allows but does not require the
+response to include time.
+ 
+Including "P" in %DT is suggested for dates in the past such as date of birth
+or admission date.  This will properly convert a month/day entry with no year
+to the past year and will convert two-digit years that are greater than the
+current year (e.g., "JAN 1, 98") to years in the 1800's.
+ 
+Including "F" in %DT is suggested for future dates such as "appointment
+date/time", so that, for example, when the current date is February 20, 1986,
+"MAR 4" gets converted to March 4, 1987.
+ 
+%DT("A") can be set to a string that will replace the standard "DATE: " prompt
+when the user is asked for input.  This is like the use of DIC("A") for the
+^DIC routine.
+ 
+%DT("B") may be set as the default answer to the date prompt.  It is the
+programmer's responsibility to ensure that %DT("B") contains a valid
+Date/Time.  Allowable date input formats are explained in Chapter II of the
+FileMan User's Manual.
+ 
+If "%DT" reads a date/time response from the terminal ('%DT' contains "A"),
+and if the numeric-valued variable 'DTIME' is defined, terminal input will
+"time out" after 'DTIME' seconds if no response is made; in this case, 'Y'
+will be returned as "-1" and 'DTOUT' will be returned as "1".  All variables
+set before calling "%DT" are returned unchanged.
+ 
+An option input parameter, '%DT(0)', can be used with the "%DT" routine.  This
+variable prevents the input date value from being accepted if it is
+chronologically before, or after, a particular date.  Set '%DT(0)' equal to a
+FileMan-format date (e.g., %DT(0)=2690720) to allow input only of dates
+greater than or equal to that date.  Set it negative (e.g.,
+%DT(0)=-2831109.15) to allow only dates less than or equal to that
+date/time.  Set it to "NOW" to allow dates from the current (input) time
+forward.  Set it to "-NOW" to allow dates up to the current time.  Be sure to
+'KILL' this variable after returning from "%DT"!
+ 
+There is a simple way to do the reverse of what "%DT" does, i.e., to turn a
+date from "internal" YYYMMDD format to "external" format.  Simply set the
+variable 'Y' equal to the internal date, and execute ^DD("DD").  Thus, for
+example:
+ 
+         SET Y=2690720.1630 XECUTE ^DD("DD")
+ 
+will result in 'Y' being equal to "JUL 20,1969@16:30".
+ 
+ 
+I.  DATE COMPARE -- "%DTC"
+ 
+%DTC has a number of entry points.  The number of days between two dates can
+be found by setting 'X1' and 'X2' to "YYYMMDD"-type dates and then calling
+"%DTC".  The result is returned in 'X'; 'X1' and 'X2' are killed.  The result
+can be thought of as X1-X2; it can be negative.  '%Y' is returned as 1 when
+the dates both have month and day values, %Y=0 when either date is imprecise.
+ 
+C^%DTC takes a date in 'X1' and adds 'X2' days, returning a "YYYMMDD"-type
+date in 'X' and a $H format date in '%H'.
+ 
+H^%DTC converts a "YYYMMDD" date in 'X' to a $H format date (output in %H).
+'%Y' is returned with a             with blank lines inserted every
+                           other line.
+      
+     |SINGLE-SPACE|        'Turns off' double-spacing for
+                           following text.
+      
+     |TOP|                 Causes a page break to occur at this
+                           point.
+      
+     |PAGEFEED(argument)|  Causes page breaks to occur in
+                           following text, whenever fewer than
+                           'argument' number lines remain on
+                           the current page.
+      
+     |PAGESTART(argument)| Causes text on following pages to
+                           begin at line # 'argument' of the
+                           page.
+      
+     |SETPAGE(argument)|   Resets page numbering, so that the
+                           following page number will be
+                           'argument'+1.
+      
+     |BLANK(argument)|     Causes 'argument' number of blank
+                           lines to inserted at this point in
+                           the text.
+      
+     |INDENT(argument)|    Causes following text to be indented
+                           'argument' number of spaces from
+                           left margin.
+      
+     |SETTAB(argument1,argument2,argument3...)|
+                           Sets tab positions for following
+                           text.  In subsequent lines, the
+                           first "|TAB|" encountered will cause
+                           indentation to column position
+                           'argument1' characters from the left
+                           margin.  The second "|TAB|"
+                           encountered will cause indentation
+                           to column position 'argument2', and
+                           so on.  In default of any "SETTAB"
+                           function, the tab settings are
+                           5,10,15,20,...  column positions
+                           from the left margin.  If any SETTAB
+                           argument is negative, it means
+                           that any text following the
+                           corresponding "|TAB|" will be
+                           right-justified so that the rightmost
+                           column of that text will fall in the column
+                           number that is the absolute value
+                           of the SETTAB argument.  If a SETTEB argument 
+                           is the literal "C", the text
+                           following the corresponding ""
+                           will be centered on the page.
+      
+     |TAB n|               Overrides any "SETTAB" specification
+                           and causes tabbing to the 'n'th
+                           column over from the left margin.
+                           Output is right-justified on the
+                           'n'th column if 'n' is negative or
+                           centered if 'n' is the literal "C".
+      
+     |WIDTH(argument)|     Specifies that the following text
+                           will always be printed out in a
+                           column 'argument' characters wide.
+                           ('Argument', in other words, is the
+                           difference between the left margin
+                           position and the right margin
+                           position, plus 1.)  Note that, in
+                           the absence of a "WIDTH"
+                           specification, the output column
+                           width is determined by the user (or
+                           defaulted by the system) at "Print"
+                           time.
+      
+     |NOWRAP|              Causes following text to be printed
+                           line-for-line (without wrap-around).
+                           This eliminates the need to end each
+                           line with a tab or start the line
+                           with a space to force the line to be
+                           printed as it stands.
+      
+     |WRAP|                Causes following text to be printed
+                           in word-wrap mode.
+      
+     |_|                   Starts underlining.  Underlining
+                           continues until a second "|_|" is
+                           encountered.
+     
+      
+As will be mentioned in Chapter IX, a "|"-window within text can, in addition|
+to the above, frame any Field Name or "Computed-Field Expression".
+ 
+Note that, in order to print a " character, it must be entered as |".|
+ 
+ 
+ 
+VA FileMan  V.17 - Apr 1986                         User's Manual        (11)
+
+
+
+
+
+C. DEFAULT VALUES
+ 
+ 
+You can call for a given Field to "default" to a certain data value, by
+answering the 'EDIT WHICH FIELD:' query with the name of the field followed
+with "//" followed with the default value.  For example, if you enter
+ 
+EDIT WHICH FIELD: SEX//MALE
+ 
+every time you get to the "SEX" query for an Entry for which Sex has not yet
+been recorded, "MALE" will be prompted.
+ 
+There is even a way to force a value to be inserted into the database, even
+if a different value is already on file.  You simply use 3 slashes instead
+of two:
+ 
+EDIT WHICH FIELD: SEX///MALE
+ 
+No terminal dialogue occurs when such "mandatory defaults" are inserted.  If
+you wanted to force the value of 'SEX' to be deleted, you would enter
+ 
+EDIT WHICH FIELD: SEX///@
+ 
+and a warning that "this means automatic deletion" would appear.
+ 
+An even more powerful kind of default is the "Variable Default".  In this
+mode, you specify, not a literal value like the word "MALE", but rather a
+Field Name from which to calculate the default value for each Entry being
+edited.  One example of the usefulness of this kind of default is the case
+where you are editing two Fields, the answers to which are usually the same.
+Suppose that, for a set of patients, you want to enter a "NEXT OF KIN" Field,
+followed by a "BENEFICIARY" Field.  Once you have typed a patient's "NEXT OF
+KIN", you want to see that particular answer re-prompted as the value of
+"BENEFICIARY".  The process would look like this:
+ 
+INPUT TO WHAT FILE: PATIENT
+EDIT WHICH FIELD: ALL// NEXT OF KIN
+THEN EDIT FIELD: BENEFICIARY//NEXT OF KIN
+    DO YOU MEAN "NEXT OF KIN" AS A VARIABLE? YES//
+THEN EDIT FIELD:
+ 
+Select PATIENT NAME: BROWN,JOE
+NEXT OF KIN: MRS SARAH BROWN
+BENEFICIARY: MRS SARAH BROWN//
+ 
+Select PATIENT NAME: CAPLAN, IRVING
+NEXT OF KIN: MR BILL CAPLAN
+BENEFICIARY: MR BILL CAPLAN// MISS JULIE CAPLAN
+ 
+Here, "SARAH BROWN" ends up as both "Next of Kin" and "Beneficiary" of Joe
+Brown, while Caplan's "Next of Kin" and "Beneficiary" are two distinct people.
+ 
+A "Variable Default Value" can be not just a Field Name, but any
+"Computed-Field Expression" (like "LAST VISIT DATE+365").  See Chapter VIII.
+ 
+What happens when a "default value" is specified for a Word-Processing data
+type? The effect is exactly analogous to other defaults: the default value
+becomes the first line of the Word-Processing text.  Actually, it is possible
+to default or "stuff" an entire multi-line text into a Word-Processing data
+type, by use of a "Computed-Field Expression" that takes a multiple value; see
+Section IX.D.  An alternative form of default inputting for Word-Processing
+data types is chosen by following the "//" or "///" with a "+" sign.  This
+means "add on" the following text to whatever may already be on file.  Let's
+take the example of our Word-Processing 'HISTORY' data in the Patient file:
+ 
+EDIT WHICH FIELD: DIAGNOSIS
+EDIT WHICH DIAGNOSIS SUB-FIELD: HISTORY//+ This case is essentially normal.
+ 
+For each Patient selected subsequent to this dialogue, the text string " This
+case is essentially normal" would be appended automatically to any 'HISTORY'
+that already existed for the chosen Patient and Diagnosis; if no 'HISTORY'
+existed, the string would become "line 1" of the 'HISTORY' text.  The user
+would then see the amended text, and be allowed to edit it in the usual way
+through the Word-Processing Editor.  If three slashes ("///") were used
+instead of two, the "add-on" would be made, and no terminal editing for the
+'HISTORY' Field would occur.
+ 
+ 
+ 
+D. "LOOPING"
+ 
+ 
+The user of 'ENTER OR EDIT FILE ENTRIES' can "loop" through a group of
+entries, without having to select each Entry individually:
+ 
+Select PATIENT NAME: ^LOOP  (Type the entire word ^LOOP)
+    EDIT ENTRIES BY: NAME//
+    START WITH NAME: FIRST//
+ 
+    ADAMS,JOHN
+NAME: ADAMS,JOHN//
+DOB: APR 1, 1923//
+ 
+    BROWN,JOE
+NAME: BROWN,JOE//
+    .
+    .
+    .
+ 
+This "^LOOP" facility, in combination with the "///" convention, makes it easy
+to "load" data values into newly-created Fields.  For example, suppose we have
+a patient data base to which a new Field called 'FOLLOW-UP DATE' has been
+added.  We want to create values for this Field for all patients who have
+'LAST VISIT DATE's earlier than 1977 on file.  For all such patients, we want
+'FOLLOW-UP DATE' set equal to 'JUNE 1, 1982'.  We use 'ENTER OR EDIT FILE
+ENTRIES' as follows:
+ 
+VA FileMan  V.17 - Apr 1986                         User's Manual        (12)
+
+
+
+
+
+EDIT WHICH FIELD: FOLLOW-UP DATE///JUNE 1, 1982
+THEN EDIT FIELD:
+ 
+Select PATIENT NAME: ^LOOP
+EDIT ENTRIES BY: NAME// LAST VISIT DATE
+START WITH LAST VISIT DATE: FIRST// 1900
+GO TO LAST VISIT DATE: LAST// DEC 31, 1976
+   WITHIN LAST VISIT DATE, EDIT ENTRIES BY:
+ 
+...HOLD ON, PLEASE...
+ 
+LAST VISIT DATE: APR 17, 1971
+JONES, SAM
+SMITH, SALLY
+LAST VISIT DATE: APR 18, 1971
+JOHNSON,BILL
+    .
+    .
+    .
+ 
+Note that the "looping" through visit dates up to 1977 happens automatically,
+with no keyboard input.
+ 
+Suppose, next, that you wanted to un-do the work done in the previous example,
+that is, you want to delete all these 'FOLLOW-UP DATES':
+ 
+EDIT WHICH FIELD: FOLLOW-UP DATE///@
+    WARNING--THIS MEANS AUTOMATIC DELETION!
+THEN EDIT FIELD:
+ 
+Select PATIENT NAME: ^LOOP
+EDIT ENTRIES BY: NAME// LAST VISIT DATE
+START WITH LAST VISIT DATE: FIRST// 1900
+GO TO LAST VISIT DATE: LAST// 12 31 76
+    WITHIN LAST VISIT DATE, EDIT ENTRIES BY:
+ 
+...JUST A MOMENT, PLEASE...
+ 
+LAST VISIT DATE: APR 17, 1971
+JONES, SAM
+SMITH, SALLY
+LAST VISIT DATE: APR 18, 1971
+JOHNSON,BILL
+    .
+    .
+    .
+ 
+ 
+ 
+VA FileMan  V.17 - Apr 1986                        User's Manual        (13)
+
+
+
+
+
+E. INPUT TEMPLATES
+ 
+ 
+Just as you can store away a complex output specification in a "Print
+Template" for later use, you can store a long list of "EDIT FIELDS" in an
+Input Template.  If you answer the
+ 
+EDIT WHICH FIELD:
+ 
+query at least five different times, or if you answer it with a "]".  The
+following is an example.
+ 
+Select OPTION: ENTER OR EDIT FILE ENTRIES
+ 
+INPUT TO WHAT FILE: PATIENT//
+EDIT WHICH FIELD: ALL// NAME
+THEN EDIT FIELD: SSN
+THEN EDIT FIELD: ]
+THEN EDIT FIELD:
+STORE THESE FIELDS IN TEMPLATE: UPDATE
+ 
+By specifying a template, the input specifications can be easily recalled in
+the future without retyping them.  The Template Name must be 2-30 characters
+in length.  The Field numbers (with their defaults, if you have specified any)
+will be stored away so that, when you return to this Option subsequently, you
+can edit the same Fields again in the same way just by answering "EDIT WHICH
+FIELD:" with the name of the Template, enclosed in brackets.
+ 
+When you return to re-use an Input Template in this way, you will be asked if
+you wish to edit its Field specifications.  Normally you would take the "NO"
+default here.  If you answer "YES" you will first see the Template Name, which
+you can then edit (typing "@" will delete the whole Input Template).  You can
+then edit the security codes for "Read Access" and "Write Access", and then
+the original answers to the "EDIT WHICH FIELD": questions.  You can re-type
+any answer you wish, or delete it with '@'.  To insert a new Field ahead of
+the Field being displayed, precede your line with an up-arrow ('^').  When you
+have finished, you can save your "edited" Template under the same Name, or a
+new one.
+ 
+ 
+ 
+VA FileMan  V.17 - Apr 1986                         User's Manual        (14)
+
+
+
+
+
+F.  FORCING SPECIAL PROMPTS
+ 
+ 
+Normally, the standard "Label" of a field is used to ask the user for the
+input value of that field.  Thus, the examples in Chapter VI.D., above,
+assumed that "NAME" and "DOB" were the "Labels" of their respective fields.
+It is possible, however, to specify a 'Prompt' for any Field that is
+different from the label: simply answer the "EDIT WHICH FIELD:" query with
+the Label, followed by ";", followed by the desired prompt, within quotation
+marks.  Thus,
+ 
+EDIT WHICH FIELD: DOB;"Date of Birth"
+ 
+will cause the DOB field to be asked in the form:
+ 
+Date of Birth:    or
+ 
+Date of Birth: APR 1, 1923//
+ 
+To tell FileMan to use the Field's TITLE instead of LABEL as the input prompt,
+follow the field name (or number) with ";T".  Thus, when editing the Patient
+File, you can enter:
+ 
+EDIT WHICH FIELD: .01   NAME
+THEN EDIT FIELD: SSN
+THEN EDIT FIELD: DOB;T
+ 
+These specifications will cause FileMan to display "DATE OF BIRTH:" instead of
+"DOB:" if that has been defined as the field's title.
+ 
+ 
+VA FileMan  V.17 - Apr 1986                       User's Manual        (15)
+
+
+
+
+           VII.  HOW TO DEFINE FILES
+ 
+ 
+
+
+A. CREATING A NEW FILE
+ 
+ 
+A user who wishes to create a new File invokes the 'MODIFY FILE ATTRIBUTES'
+Option of FileMan.  He types the new File Name (3-45 characters in length)
+when asked for
+ 
+MODIFY WHAT FILE:
+ 
+and responds with "Y" when asked "ARE YOU ADDING A NEW FILE?".  File names
+should be chosen so that they may easily be distinguished from each other.  If
+different people are creating Files, it may be helpful if, by convention, they
+include their initials within the File Name, as, for example:
+ 
+MODIFY WHAT FILE: PATIENT (GFT)
+ 
+Next, the user assigns an "internal number" to this new File.  The system
+prompts the next available internal "FILE NUMBER", and the user either enters
+a null response to accept that number, or types a different (integer or
+fractional) number not already assigned to a file.
+ 
+The new File is now initialized.  By default, it is defined to contain a
+single "NAME" Field (Field number .01), which specifies free-text values, 3-30
+characters, non-numeric and no leading punctuation.  The user now can define
+any number of Attribute Fields for the new File, as described below.  After
+defining as many Fields as he wishes, he "escapes" the "FIELD:" query.
+ 
+ 
+ 
+B. CREATING FIELD DEFINITIONS
+ 
+ 
+For any given File, the user can create "Fields" describing Data that can then
+pertain to any Entry in that File.  Every File, when created, automatically is
+given one Field: a 'NAME' Field.  Any other field definitions must be made
+explicitly by the user.  All such definitions are made (and changed) in the
+'MODIFY FILE ATTRIBUTES' Option.
+ 
+When the user is first asked
+ 
+Select FIELD:
+ 
+he enters a new Field Label, and responds with 'Y' when the system asks:
+ 
+ARE YOU ADDING A NEW FIELD?
+ 
+He is then ready to specify how the new Field will describe data.
+ 
+VA FileMan  V.17 - Apr 1986                         User's Manual        (16)
+
+
+
+
+
+There are 7 types of Attributes:
+ 
+1.  Date
+2.  Numeric (this includes dollar values)
+3.  Set (single-choice multiple answer, e.g., 1=MALE/2=FEMALE)
+4.  Free text (a single alphanumeric string of characters)
+5.  Word-Processing (a multiline "document" of text)
+6.  Computed (a "virtual" Field, not stored)
+7.  Pointer (referencing an Entry in some other File)
+ 
+The user is asked for the "DATA TYPE" of the new Attribute he is creating, and
+picks one of these 7, either by number or letter.
+ 
+Now, data validation checks are asked, depending on the Data type entered.
+ 
+Date:  one can enter a minimum and maximum date (enter 'DT' to mean the date
+on which the ultimate user will be doing the typing), and can also indicate
+whether the date can be typed 'imprecisely' (e.g., "JUL 1969"), or with
+time-of-day (e.g., "JUL 20@4").
+ 
+Numeric-valued:  one enters the lowest & highest values allowed, the maximum
+number of decimal digits allowed, and whether dollar values like "$33" or
+"33.50" will be allowed; if dollar values aren't allowed, leading or trailing
+fractional zeroes in input will be rejected.
+ 
+Set of Codes:  the user enters, one by one, the several allowable
+"INTERNALLY-STORED CODES", and, for each of them, a translation, e.g.,
+INTERNALLY-STORED CODE: 1 STANDS FOR: WHITE.  FileMan will accept only a
+limited number of codes.  If the limit is exceeded, FileMan will respond "TOO
+MUCH!! - SHOULD BE A 'POINTER', NOT 'SET'".
+ 
+Free Text:  the user enters the maximum and minimum allowable string length
+of the free-text data; optionally, he can also enter a MUMPS "pattern-match"
+for the data.
+ 
+Word-processing: such fields allow entry of unlimited free-text data which
+can be formatted with the word-processing editor (see Section VI.B.).  When
+defining a word-processing field the user is asked:
+ 
+SHALL THIS TEXT NORMALLY APPEAR IN WORD-WRAP MODE? YES//
+ 
+Unless this is a type of multi-line text that should customarily be printed
+out line-for-line the way it is entered (e.g., a restaurant menu, or a course
+outline), the default "YES" answer should be taken.
+ 
+Computed:  the user enters a string of variables (the names of other
+already-defined Fields), numerals, operators (+-*/\), and parentheses; see
+Chapter IX for a fuller explanation.
+ 
+Pointer:  the name or number of the File "pointed to" is required; the File
+must have already been defined.
+ 
+After entering this type-specific information, for field types 1,2,3,4 and 7,
+the user is asked:
+ 
+    WILL FIELD BE MULTIPLE: NO//
+ 
+A 'YES' answer here means that there can be more than one occurrence of a data
+value for this Field in the same Entry at the same time (e.g., more than one
+'DIAGNOSIS' in a Patient Entry), and that new sub-Fields can later be depended
+from this Field (e.g., each 'DIAGNOSIS' could have a 'DATE OF ONSET').  Note
+that the "MULTIPLE?" question is not asked for 'Word-Processing' data types,
+since, by definition, such types take multi-line values.
+ 
+Next, the user is asked
+ 
+    IS FIELD MANDATORY? NO//
+ 
+that is, whether the data-entry user will be allowed to "null past" this Field
+without being required to answer it, for a particular Entry.
+ 
+Two special queries are asked about multiple-valued Fields:
+ 
+SHOULD USER SEE AN "ADDING NEW ENTRY?" MESSAGE FOR NEW ENTRIES (Y/N):
+ 
+'NO' here means that the new Diagnosis (or whatever) gets added without a
+verification query being asked.
+ 
+HAVING ENTERED OR EDITED ONE, SHOULD USER BE ASKED ANOTHER (Y/N):
+ 
+'Y' means that the user gets to put in several new Diagnoses, one right after
+the other; 'N' means that only one will be asked for.
+ 
+ 
+ 
+C. AN EXAMPLE
+ 
+ 
+Here is the kind of file-definition dialogue that would have been used to set
+up the rudimentary "Patient File" we have been using in our examples.  As
+usual, what the user would type is underlined; everything else would be typed
+to the user by the system.
+ 
+Select OPTION: MODIFY FILE ATTRIBUTES
+ 
+MODIFY WHAT FILE: RELIGION// PATIENT
+ARE YOU ADDING 'PATIENT' AS A NEW FILE? Y  (YES)
+FILE NUMBER: 99000// 2(The number prompted to the left of the "//" is
+                 related to a "site number" that is assigned to
+                 your computer when FileMan is initialized.  Here
+                 we override the '99000' prompted.
+ 
+ 
+Select FIELD: SEX      (A "NAME" field is automatically entered.  In
+                            addition, we want to add a field to record sex.
+ARE YOU ADDING A NEW FIELD ? Y  (YES)
+ 
+DATA TYPE OF SEX: SET
+INTERNALLY-STORED CODE: M  WILL STAND FOR: MALE
+INTERNALLY-STORED CODE: F  WILL STAND FOR: FEMALE
+INTERNALLY-STORED CODE:
+WILL SEX FIELD BE MULTIPLE: NO//   (NO)
+IS SEX ENTRY MANDATORY (Y/N): NO// Y  YES
+'HELP'-PROMPT
+ 
+ 
+Select FIELD: DOB
+ARE YOU ADDING A NEW FIELD ? Y  (YES)
+ 
+DATA TYPE OF DOB: DATE
+EARLIEST DATE (OPTIONAL): 1/1/1860  (JAN 1, 1860)
+LATEST DATE: 1963  (1963)
+CAN DATE BE IMPRECISE (Y/N): YES//
+CAN TIME OF DAY BE ENTERED (Y/N): NO//
+WILL DOB FIELD BE MULTIPLE: NO//   (NO)
+IS DOB ENTRY MANDATORY (Y/N): NO//
+'HELP'-PROMPT: TYPE A DATE BETWEEN 1/1/1860 AND 1963
+ 
+ 
+Select FIELD: RELIGION
+ARE YOU ADDING A NEW FIELD ? Y  (YES)
+ 
+DATA TYPE OF RELIGION: POINTER TO A FILE
+POINT TO WHICH FILE: RELIGION   (assuming such a File has already been
+                        defined to the system)
+SHOULD 'ADDING A NEW RELIGION FILE ENTRY' ("LAYGO")
+BE PROHIBITED WHEN ANSWERING THE 'RELIGION' QUESTION? NO//  Y (YES)
+                (we do not want users who are editing
+                patient data to be able to add a new 
+                Religion 'on-the-fly' to the Religion File.
+WILL RELIGION FIELD BE MULTIPLE? NO//   (NO)
+IS RELIGION ENTRY MANDATORY (Y/N): NO//
+'HELP'-PROMPT:
+ 
+ 
+
+Select FIELD: DIAGNOSIS
+ARE YOU ADDING 'DIAGNOSIS' A NEW FIELD? Y  (YES)
+ 
+DATA TYPE OF DIAGNOSIS: FREE TEXT
+MINIMUM LENGTH: 3
+MAXIMUM LENGTH: 30
+(OPTIONAL) PATTERN MATCH (IN 'X'):  (just pass on this one, unless you know
+                           some MUMPS)
+WILL DIAGNOSIS FIELD BE MULTIPLE? NO// Y  (YES)
+IS DIAGNOSIS ENTRY MANDATORY(Y/N): NO//
+SHOULD USER SEE AN "ADDING A NEW DIAGNOSIS?" MESSAGE FOR NEW ENTRIES (Y/N):N NO
+HAVING ENTERED OR EDITED ONE DIAGNOSIS, SHOULD USER BE ASKED ANOTHER(Y/N):Y YES
+                         (In other words, the user will be able to enter
+                         several diagnoses in a row for a given patient)
+'HELP'-PROMPT: ANSWER MUST BE 3-30 CHARACTERS IN LENGTH
+Replace
+
+ 
+ 
+Select FIELD: DIAGNOSIS       (multiple)      (to create sub-fields, return
+                                         to a multiple-valued Field)
+LABEL: DIAGNOSIS//
+READ ACCESS (OPTIONAL):
+WRITE ACCESS (OPTIONAL):
+SOURCE:
+Select DESTINATION:
+Select GROUP: 
+DESCRIPTION:
+1>
+ 
+Select DIAGNOSIS SUB-FIELD: AGE AT ONSET      (asked for multiple fields)
+ARE YOU ADDING 'AGE AT ONSET' AS A NEW DIAGNOSIS SUB-FIELD? Y  (YES)
+ 
+DATA TYPE OF AGE AT ONSET: NUMERIC
+INCLUSIVE LOWER BOUND: 0
+INCLUSIVE UPPER BOUND: 120
+IS THIS A DOLLAR AMOUNT (Y/N): NO//          ("YES" would allow the user to
+                            precede the answer with the "$" sign)
+MAXIMUM NUMBER OF FRACTIONAL DIGITS: 0//     (age value must be an integer)
+WILL AGE AT ONSET FIELD BE MULTIPLE? NO//   (NO)
+IS AGE AT ONSET ENTRY MANDATORY (Y/N): NO//
+'HELP'-PROMPT: TYPE A WHOLE NUMBER BETWEEN 0 AND 120
+Replace
+ 
+ 
+Select DIAGNOSIS SUB-FIELD: HISTORY
+ARE YOU ADDING 'HISTORY' AS A NEW DIAGNOSIS SUB-FIELD? Y  (YES)
+ 
+DATA TYPE OF HISTORY: WORD-PROCESSING
+SHALL THIS TEXT NORMALLY APPEAR IN WORD-WRAP MODE? YES//   (YES)
+'HELP'-PROMPT: SUBJECTIVE NARRATIVE OF PATIENT'S PROBLEM HISTORY
+ 
+Note that this example illustrates the creation of the six
+types of "real" data Fields: SET, DATE, POINTER, FREE TEXT,
+NUMERIC, and WORD-PROCESSING.  The "COMPUTED-FIELD" Type is
+discussed in Chapter Chapter IX.  Note that FileMan 
+automatically composed Help Prompts for some of the data
+types.  
+ 
+ 
+ 
+D. EDITING AND DELETING FIELDS
+ 
+ 
+The previous page's example illustrated, in passing, an
+important point: having once created a File Attribute, you
+can return to edit or delete it, within 'MODIFY FILE
+ATTRIBUTES', simply by re-typing its name (or number) when 
+asked: 
+ 
+Select FIELD:
+ 
+When you "return" to the Field in this way, you are able to
+change its name, and also to add/edit its Title (long form
+of its name), the 'HELP'-prompt (which the user sees every
+time he types '?' when entering values for this field),
+read/write security (see Chapter X), source, destination,
+and description of the data (only used as documentation)
+(note that 'description' is a word-processing field), and
+also to put the Field into a "GROUP", such as 
+"DEMOGRAPHIC", "FISCAL", etc.  The "GROUP" is a shorthand
+way for the user to call up several Fields at once for
+Print or Entry/Edit purposes.  For example, if NAME, SSN,
+DOB, and SEX were each designated as having GROUP="DEMOG",
+then a user of the 'ENTER OR EDIT FILE ENTRIES' Option
+could say: 
+ 
+    EDIT WHICH FIELD: DEMOG
+         DEMOG   NAME
+         DEMOG   SSN
+         DEMOG   DOB
+         DEMOG   SEX
+    EDIT WHICH FIELD:
+ 
+and all four questions would be asked for each Entry.  
+ 
+Still within 'MODIFY FILE ATTRIBUTES', you also can change
+the Data Type itself (but you can't turn a Computed Field
+into a non-Computed type, or vice versa).  You must be very
+careful in making such changes if you already have File
+data entered, since there is no guarantee that the old data
+will match the newly-specified criteria (e.g., Field
+length, etc.).  If you do change a field definition,
+however, the system will ask if you want "existing data 
+checked for inconsistencies", and will print you a list of
+any discrepancies it finds.  If more than one such
+discrepancy is found, it will ask you if you wish to save
+off the list of such Entries under some Template name.  To 
+generate this list at a subsequent time, use the 'VERIFY'
+sub-option under 'UTILITY FUNCTIONS' (see Chapter VIII.D.).  
+ 
+Note, too, that you "return" to a Field that has been
+defined as multiple-valued if you want to add extra
+sub-Fields pertaining to it.  Simply enter null responses
+until you get to the "Select SUB-FIELD:" query, at which 
+point you can enter a new sub-Field.  
+ 
+The following restrictions apply to changing the
+definitions of existing data Fields in a File: 
+ 
+1. 'Multiples' can't be changed to 'singles', and 'singles'
+can't be changed to 'multiples'.
+ 
+2. "Computed" Fields can't be changed to other types of Fields,
+and other types of Fields can't be changed to Computed Fields.
+ 
+3. "Word-Processing" types can only be changed into multiple-
+valued Free Text Fields.
+ 
+4. Only a multiple-valued Free Text Field can be changed
+into a Word-Processing Field, and only if no other sub-Fields
+are defined at the multiple level.
+ 
+As for deleting a Field, note that a Field is simply an
+"Entry" in a Data Dictionary.  Remember, too, that any
+entry can be deleted by deleting its Name (with "@"). 
+Hence, in the "MODIFY FILE ATTRIBUTES" option, a Field in a
+Data Dictionary can be deleted by typing "@" after the
+display of its Label.  At this point, along with deleting
+the Field, the system will delete the corresponding File
+data (if any) that was described by the Field, as long you 
+answer "YES" to the question: 
+ 
+OK TO DELETE FIELDS IN THE EXISTING ENTRIES? Y//
+ 
+CAUTION: If you answer "NO" to the above question, it may
+create data conflicts in the future if you create new
+Fields.  It is advisable to always delete existing entries. 
+Only a programmer can delete the entries if you have 
+answered "NO".  
+ 
+ 
+ 
+VA FileMan  V.17 - Apr 1986                         User's Manual        (17)
+
+
+
+
+E.  ENTRIES "REFERENCED BY NUMBER"
+ 
+As mentioned on Page 1, there are certain Files which
+always have unique numbers associated with each of their
+Entries.  Usually this means that somebody (like Herr
+Doktor Ludwig Koechel in the case of the Mozart File) has 
+gone to the trouble of creating a numbering scheme for the
+Entries.  A FileMan user who wishes to set up such a File,
+in which a unique "Internal Number" is always matched with
+each Entry Name, can do so by creating a Field numbered 
+".001" for the File: 
+ 
+Select FILE: MOZART WORK
+Select FIELD: .001
+    ARE YOU ADDING A NEW FIELD? YES
+    LABEL: KOECHEL NUMBER
+    FIELD NUMBER: .001//     (Just to give you a verification)
+ 
+DATA TYPE OF KOECHEL NUMBER: NUMERIC
+INCLUSIVE LOWER BOUND: 1
+INCLUSIVE UPPER BOUND: 626     (Ah, if there were only more!)
+IS THIS A DOLLAR AMOUNT (Y/N): NO//
+MAXIMUM NUMBER OF FRACTIONAL DIGITS: 0//
+ 
+This dialogue is just like what would normally create a
+numeric-valued Field.  The difference is that, in this
+case, we are describing the File's "primary key", or
+"Internal Entry Number".  Once such a ".001 field" is
+defined, a user who creates a new Entry in the File will
+see something like: 
+ 
+Select MOZART WORK: EINE KLEINE NACHTMUSIK
+    ARE YOU ADDING A NEW MOZART WORK? Y
+    KOECHEL NUMBER: 525
+ 
+More importantly, with a ".001 field" defined, an Entry in
+the File can always be looked up by Internal Number,
+irrespective of any other cross-referencing that is created
+for the File.  Thus: 
+ 
+Select MOZART WORK: 525   EINE KLEINE NACHTMUSIK
+ 
+It should be understood that Internal Numbers must always
+be "canonic", i.e., contain no alpha suffixes, leading
+zeros, or trailing fractional zeroes.  
+ 
+'Number-meaningful' lookup can be forced by prefixing the
+numeric input with the "`" (left-sided single quote or
+accent grave).  
+ 
+Incidentally, the above Field-creation example illustrates
+how the user of 'MODIFY FILE ATTRIBUTES' can force a Field
+to have a particular number (".001" in this case): just
+enter the new number first, and then the new label.  It is
+often useful to sequence the Fields so that, when the user
+of 'ENTER OR EDIT FILE ENTRIES' asks to Enter/Edit "ALL"
+Fields, he will see the Field questions presented in a
+"natural" order.  If we wanted to add 'SSN' to our Patient
+File and place it between DOB and RELIGION, the dialogue
+would be: 
+ 
+Select FIELD: 2.5  (or any number between 2 and 3)
+ARE YOU ADDING A NEW FIELD: Y   (YES)
+LABEL: SSN
+FIELD NUMBER: 2.5//
+.
+.
+.
+ 
+VA FileMan  V.17 - Apr 1986                    User's Manual        (18)
+
+
+
+
+            VIII.  UTILITY ROUTINES
+ 
+ 
+
+A.  EDITING FILE DESCRIPTIONS (FILE DELETE)
+ 
+To change the name of a File, choose the 'EDIT FILE'
+suboption of the 'FileMan Utilities' option.  After
+entering the File name, you will see it displayed back to
+you, followed by '//'.  At this point you can type a new
+version of the name.  You can also delete the entire File &
+its Data Attribute Dictionary, simply by typing '@'.  You
+are, at this point, offered the choice of totally deleting
+the File, with all its Templates and File definitions, or 
+else just deleting the current individual Entries in the
+File.  FileMan will not allow deletion of any file that is
+pointed to by another file.  
+ 
+The 'EDIT FILE' suboption also lets you create and change
+Security access to a File, as explained on Chapter X,
+below.  
+ 
+Here, too, one can answer 'YES' to the query 
+ 
+ASK OK? WHEN LOOKING UP AN ENTRY?
+ 
+if one wants to require that any user who selects an Entry
+in this File for any lookup purpose be required to answer
+positively an "...OK?" query.  This feature can be helpful
+on Files containing many similar or confusingly-named 
+Entries (e.g., drug, diagnoses).  
+ 
+Finally, the 'EDIT FILE' suboption allows you to enter a
+"Word-Processing" text descriptive of or documenting the
+File; this text appears in the "STANDARD" Data Dictionary
+listing.  Also, for documentation purposes, one can enter
+2-character "APPLICATION GROUPS" to which this File may
+belong.  
+ 
+ 
+B. CROSS-REFERENCING
+ 
+Recall that a File can be "inverted" on any Field.  In
+FileMan jargon, a Field is said to be "cross-referenced" if
+File Entries are typically sorted according to the values
+they hold for the Field, or if the Field values are so 
+distinctive that Entries are to be "looked up" by that
+Field (e.g., patients are looked up by their Social
+Security Numbers).  When a new File is first set up,
+FileMan assumes that the Name Field will be
+cross-referenced.  The user of the Utility Option, however,
+can add or delete cross-references for any Field at any
+time, by calling the "CROSS-REFERENCE" sub-option.  After
+the user identifies the Field (or sub-Field, or
+sub-sub-Field) in question, the system will display any
+existing cross-references, and ask if the user wants to 
+delete them.  Then it will ask if he wants to add a new
+cross-reference.  Six types of cross-referencing are
+currently allowed:  
+ 
+1. "REGULAR"   The field value becomes the cross-reference.  
+ 
+2.  "KWIC"     "Key Word in Context" -- each word of 3 or 
+               more letters in the Field value (except for
+               THE, AND, etc) becomes a separate
+               cross-reference (e.g., "KING LEAR" can be
+               looked up under either "KING" or "LEAR").
+ 
+3.  "MNEMONIC" The Field values cross-reference in along with
+               the 'Name' Field cross-references (so that,
+               for example, 'MAIDEN NAME' Field values are
+               found along with 'NAME' values in any lookup).
+ 
+4.  "MUMPS"    Programmers can create 'SET' and 'KILL'
+               statements to take the Field value 'X' and
+               perform some special operation of their own
+               devising.
+ 
+5.  "SOUNDEX"  The field value is soundex-transformed into a
+               4-character string, which becomes the
+               cross-reference.  (Soundex-transformation
+               would access "GONZALEZ", "GONZELES",
+               "Gonzales", and "Gonsalless" as equivalents;
+               entry of any of these forms looks up all the
+               others automatically.)
+ 
+6.  "TRIGGER"  Whenever the Field is updated, a different
+               Field can be automatically updated at the same
+               time.  See Chapter XII (Triggers).
+
+ 
+Here is an example of a dialogue that would create a "Soundex"
+cross-reference on a Name Field that already was
+cross-referenced: 
+ 
+    Select OPTION: 6  UTILITIES
+    MODIFY WHAT FILE: PATIENT//
+Select UTILITY OPTION: CROSS-REFERENCE A FIELD
+    Select FIELD: NAME
+ 
+    CURRENT CROSS-REFERENCE IS REGULAR 'B' INDEX OF FILE
+    WANT TO DELETE IT? NO//
+ 
+    WANT TO CREATE A NEW CROSS-REFERENCE FOR THIS FIELD? NO// Y
+    CROSS-REFERENCE NUMBER: 2//   (Just hit 'return')
+    Select TYPE OF INDEXING: REGULAR// SOUNDEX
+ 
+JUST A MOMENT, PLEASE....
+ 
+Note that when cross-referencing a Field that is several levels
+of multiples deep, you can create the cross-reference at any of
+the sub-File levels.  Thus, with our Patient File containing
+multiple DIAGNOSIS Fields for each Patient, one might plausibly
+want to cross-reference the whole File by DIAGNOSIS (so that the
+sort by DIAGNOSIS illustrated in Chapter IV, Part B, could be 
+produced quickly).  Alternatively, or additionally, one might
+want to cross-reference an individual patient's Diagnoses.  
+ 
+Word-Processing-type Fields cannot be cross-referenced in any
+way.  
+ 
+VA FileMan  V.17 - Apr 1986                          User's Manual        (19)
+
+
+
+
+C. "RE-INDEXING"
+ 
+Sometimes, a File's Cross-reference pointers will get confused,
+especially when Attribute-definition is repeatedly changed, or
+when a programmer intervenes in FileMan logic.  Happily, the
+Utility Option called "RE-INDEX" can usually straighten out the
+problem, although it can take a long time to run if the File has
+many entries.  You will first have to answer "YES" to a question
+like 
+ 
+    DO YOU WISH TO RE-CROSS-REFERENCE ONE PARTICULAR INDEX? NO//
+    OK, ARE YOU SURE YOU WANT TO KILL OFF THE EXISTING INDEX? NO//Y
+ 
+Next, you will be asked: 
+ 
+    DO YOU THEN WANT TO 'RE-CROSS-REFERENCE? YES//
+ 
+Another "YES" answer here will start the re-indexing.  
+ 
+If a file contains more than one cross-reference, you will ge
+able to get a list of all the cross-references by typing "?". 
+You can then re-do a single cross-reference, or all the File's
+cross-references.  
+ 
+ 
+D. VERIFYING FILE DATA
+ 
+The 'VERIFY' sub-option will re-check the actual data stored in
+a File's Entries.  When you invoke it, you can ask it to
+"re-validate" all existing values of a particular Field, or
+"ALL" Fields at a given File level.  It uses, of course, the
+current Field definition to do the validation.  If more than one
+discrepancy is found between the current definition and the data
+on file, you will be asked if you want to save off the list of
+those Entries containing the inconsistent data.  By entering a
+Template Name at this point, you will later be able to "SORT BY"
+or "EDIT BY" the Entries in this Template to display or edit
+them.  
+ 
+ 
+E. 'IDENTIFIERS'
+ 
+For a given File, such as a Patient File, certain fields may be
+so important that we want to be sure that values for them are
+captured whenever a user creates a new Entry for the File.  For
+example, we may always want to ask "DOB:" whenever a new Patient
+is added to the File, even if he is added in "Learn-as-you-Go"
+mode.  Any (non-multiple) Field can be specified as being such
+an "identifier" for the File simply by using the "IDENTIFIER"
+Utility Option.  For example: 
+ 
+    Select FIELD: DOB
+    WANT TO MAKE 'DOB' AN IDENTIFIER? NO// Y  (YES)
+    WANT TO DISPLAY DOB WHENEVER A LOOKUP ON THE FILE IS DONE? YES//  (YES)
+ 
+Here, the positive answer to the last question causes the
+Patient 'DOB' value to show up whenever a lookup on a patient is
+done subsequently, for example: 
+ 
+    Select PATIENT NAME: DOE
+    CHOOSE FROM:
+         1  DOE,JANE  10-14-77
+         2  DOE,JANET   9-1-22
+ 
+Note that an 'identifier' Field will not be asked if its "write
+access" security (see following section) does not match the
+access code of the user.  Note, too, that if the 'identifier'
+Field has been specified (in the Modify File Attributes Option)
+as a required Field, the user must type a valid answer to it
+when it is asked as an identifier; otherwise the Entry just 
+created is deleted.  Thus one can make certain, for example,
+that every patient on file will also have a Date of Birth on
+file.  
+ 
+Identifiers can apply to multiple Fields as well as to Files. 
+Thus, we could make "AGE AT ONSET" an identifier for the
+multiple DIAGNOSIS Field as follows: 
+ 
+Select UTILITY OPTION: IDENTIFIER
+Select FIELD: DIAGNOSIS (multiple)
+Select SUB-FIELD: AGE AT ONSET
+WANT TO MAKE 'AGE AT ONSET' AN IDENTIFIER? NO// Y  (YES)
+WANT TO DISPLAY AGE AT ONSET WHENEVER
+    A LOOKUP ON THE FILE IS DONE? YES// N  (NO)
+ 
+As a result of this dialogue, every time a new Diagnosis for a
+Patient is entered, the AGE AT ONSET would immediately be asked,
+too.  It would not, however, be automatically displayed at
+subsequent DIAGNOSIS lookup.  
+ 
+To drop a Field's status as an identifier, simply return to this
+Utility Option, select the Field, and answer 'YES' to the
+question: 
+ 
+FIELD IS ALREADY AN IDENTIFIER; WANT TO DELETE IT? NO//
+ 
+ 
+F. OUTPUT TRANSFORM
+ 
+Sometimes, one wants to store a Field differently from the way
+in which it is displayed.  For example, a Social Security Number
+may be entered and stored as nine digits, but it may be desired
+that it always be displayed with punctuating hypens.  The
+'OUTPUT TRANSFORM' sub-option allows a user to make this kind of
+specification by associating with any Field a "Computed-Field 
+expression" that operates on the value of that Field.  For
+example, to specify that an "SSN" field always appear with
+dashes inserted, one does the following: 
+ 
+Select OPTION: UTILITIES
+ 
+Select UTILITY OPTION: OUTPUT TRANSFORM
+Select FIELD: SSN
+OUTPUT TRANSFORM: $E(SSN,1,3) "-" $E(SSN,4,5) "-" $E(SSN,6,9)
+ 
+Remember that, for data input purposes, the "transform" does not
+apply (the user of the Enter/Edit Option shouldn't type the
+dashes).  Note, too, that to retrieve the "real" value of a
+Field which has an Output Transform, one can refer to, for
+example, "INTERNAL(SSN)".  Finally, note that, when "Sorting By" 
+a Date-valued Field, the internal form of the date is
+automatically used.  
+ 
+VA FileMan  V.17 - Apr 1986                        User's Manual        (20)
+
+
+
+
+G. UNEDITABLE FIELDS
+ 
+This UTILITY OPTION allows you to specify that a particular
+Field shall contain unalterable data: once a value exists for
+such a Field, the FileMan ENTER/EDIT routine will not allow
+editing or deletion of that value.  (If, however, such a value
+were part of a multiple sub-Field, deleting of that entire
+sub-Field would be allowed, unless the ".01" field itself were
+made uneditable.) To remove the "uneditable" restriction on a
+Field, return to the same Field under the same UTILITY OPTION.  
+ 
+ 
+H.  TEMPLATE EDIT
+ 
+This sub-option allows you to enter a description for any of the
+templates in the selected file, be they Print, Sort, or Input
+types.  This description will be printed when you request a
+"TEMPLATES ONLY" data dictionary list.  In addition, you may
+also change the template access priveleges.  For Sort Templates,
+this sub-option is used to associate a particular Print Template 
+with the Sort Template as discussed in Chapter IV.  
+ 
+VA FileMan  V.17 - Apr 1986                       User's Manual        (21)
+
+
+
+
+       IX.  "COMPUTED-FIELD" EXPRESSIONS
+ 
+ 
+ 
+A. CREATING COMPUTED FIELDS
+ 
+ 
+The concept of a "Computed Field" deserves its own section.  To
+define a Computed Field, you answer the 'MODIFY FILE ATTRIBUTES'
+question 
+ 
+    DATA TYPE: COMPUTED
+ 
+and then answer 
+ 
+    'COMPUTED-FIELD' EXPRESSION:
+ 
+with a string combining one or more "expressions" punctuated by
+"operators".  The "operators" are single punctuation characters: 
+ 
+    +              addition
+    -              subtraction
+    *              multiplication
+    /              division
+    \              'truncated' division (13\2 = 6)
+                   concatenation ("AB" "CDE" = "ABCDE")
+ 
+A second group of operators are those that create "True-False"
+values (also known as "Boolean" values).  For example "AGE>65"
+("age is greater than 65") is an expression that is either true
+or false.  
+ 
+    >              is greater than
+    <              is less than
+    =              is equal to
+    ]              follows (in alphabetical order)
+    [              contains (e.g., "AB"["A" is true)
+    !              or
+    &              and
+ 
+An apostrophe ('), meaning "not", can precede any of the above
+seven "True-False" operators, so that "A'>B" means "A is not
+greater than B", "A'!B" means "neither A nor B", "A'&B" means
+"not both A and B", and so forth.  Parentheses can also be used
+to control the order in which the operations of a Computed-Field
+Expression are performed.  In the absence of parentheses, 
+computation is strictly left-to-right.  Thus "3+4/2" is 3.5,
+whereas "3+(4/2)" is 5.  
+ 
+An "element" in a Computed-Field Expression can be any of the
+following: 
+ 
+1.A Field Name within the File in question (e.g., 'DIAGNOSIS') 
+  the Field Name can be partially spelled (e.g., 'DIAG'),
+  if unambiguous.  
+ 
+2.A Field Number, preceded with '#' (e.g., '#3') 
+ 
+3.A Literal number (e.g., '3.14159265') 
+ 
+4.A Literal text string, bracketed in quotes (e.g.,'"HELLO"') 
+ 
+5.The words "TODAY" or "NOW", which are, of course, 'date-valued' 
+ 
+6.A valid date, such as "20 JULY 1969", which is punctuated by spaces.
+  (Warning: "7-20-1969" would be evaluated as "-1982"!).  
+ 
+7.The word "NUMBER" (or, for clarity, "PATIENT NUMBER", "ADMISSION NUMBER", 
+  etc.), which means the Internal Entry Number of the File or sub-File in 
+  question.  
+ 
+8.The name of a file, followed by the name of a field in that file.  For 
+  example, "PATIENT NAME".  Like "PATIENT NUMBER", this syntax is sometimes 
+  helpful when an expression is referring to more than one file or subfile.  
+ 
+9.A Function (see Section C, below) 
+ 
+10.An "Extended Pointer" (see Section D, below) 
+ 
+Elements and operators are combined to yield "Computed-Field
+Expressions", so that, for example, 
+ 
+    'COMPUTED-FIELD' EXPRESSION: NUMBER OF BEDS*OCCUPANCY PERCENTAGE/100
+ 
+would create a Field equal to the value of "number of beds" times the 
+"occupancy percentage" divided by 100.  
+ 
+"Set" and "Pointer" data types will be manipulated using the
+"external" values of these Fields.  For example, in the Patient File
+defined in Chapter VII above, we had a "Set"-type field called 'SEX',
+and a "Pointer"-type field called 'RELIGION'.  In this File, then, we
+could define a Computed Field called, say, 'S&R', that would
+concatenate together the SEX and RELIGION values for any Patient: 
+ 
+    Select FIELD: S&R
+    ARE YOU ADDING A NEW FIELD? YES  (YES)
+    DATA TYPE OF S&R: COMPUTED
+    'COMPUTED-FIELD' EXPRESSION: SEX " " RELIGION
+ 
+The value of this Field for a male baptist Patient would be the
+12-character string "MALE BAPTIST".  (The "INTERNAL" Function can be
+used to return the "internal" values of Set, Pointer, and Date Fields
+-- see Section C. below.) 
+ 
+What happens when Date-valued Fields are manipulated with "+" and "-" 
+operators? The answer is that the value of DATE1-DATE2 is the number
+of days(a positive or negative integer) by which the dates differ. 
+Similarly, if a Number-valued Field is added to or subtracted from a
+Date-valued Field, the result is a new date; i.e., if the 'DOB' Field
+has the value 'JUL 20, 1969', then the value of the computed
+expression "DOB+30" is 'AUG 19, 1969'.  A Computed-Field expression
+can include the expression 'TODAY', which always means "today's
+date"; thus, if 'DOB' is date-of-birth, "TODAY-DOB\365.25" gives the
+corresponding age, as of today (the date the computation is being 
+made).  
+ 
+    Select FIELD: AGE
+  ARE YOU ADDING A NEW FIELD? Y   (YES)
+ 
+    DATA TYPE OF AGE: COMPUTED
+ 
+    'COMPUTED-FIELD' EXPRESSION: TODAY-DOB\365.25
+ 
+ 
+Currently, "Word-Processing"-type data Fields can be manipulated only
+with the "contains" ('[') operator.  For example, a valid
+Computed-Field expression within the "DIAGNOSIS" Field of our sample
+Patient File is: 
+ 
+    HISTORY["poverty"
+ 
+This "True-False" expression evaluates as being "True" if the
+DIAGNOSIS in question has some 'HISTORY' text on file, and if that
+text contains the word "poverty" somewhere within it.  
+ 
+When creating a Computed Field, the following dialogue is presented: 
+ 
+NUMBER OF FRACTIONAL DIGITS TO OUTPUT (ONLY ANSWER IF NUMBER-VALUED): 0
+ 
+ 
+for the Field.  If you choose to answer, you will be telling FileMan
+that the Field is numeric-valued, and that usually you will want the
+computed value rounded to a certain number of decimal places when it
+is printed.  Having answered this question, you will next be asked: 
+ 
+SHOULD VALUE ALWAYS BE INTERNALLY ROUNDED TO 0 DECIMAL PLACES? NO// (NO)
+ 
+ 
+Here, you should accept the "NO" default unless you want the number
+of decimal places always to apply to this Field (even when it is used
+in other Computed Fields).  
+ 
+Certain types of Computed Fields, particularly those that involve the
+product or ratio of two variables, are required to be "totalled"
+(under the Print Option) in a special way: their "totals" should
+reflect the products or ratios of the totals of their component
+Fields.  In defining such a Computed Field, you will be asked: 
+ 
+WHEN TOTALLING THIS FIELD, SHOULD THE SUM BE COMPUTED FROM THE 
+    SUMS OF THE COMPONENT FIELDS? NO//
+ 
+Answer "YES" to set up totalling in this special way.  
+ 
+The Computed Field, cleverly used, can be a very useful tool.  Having
+set up such a Field, one can then Search or Sort By it, and also
+include it in the definition of other Computed Fields.  In the latter
+case, indirection is preserved, so that, for example, if you define
+Computed Field #2 in terms of Computed Field #1, and then you
+subsequently decide to re-define Field #1, Field #2 will
+automatically use the new Field #1 calculation.  
+ 
+In defining a Computed Field, you will also be asked: 
+ 
+    LENGTH OF FIELD: 8//
+ 
+Here you can type the maximum number of character positions that the
+field should normally occupy in output.  Default value is eight even
+if the computed field involves free text fields.  Be sure to allocate
+enough space to accomodate the involved fields.  
+ 
+ 
+ 
+B. "ON-THE-FLY" COMPUTED EXPRESSIONS
+ 
+ 
+Once you understand how to create "Computed-Field Expressions", it is 
+important to realize that there are many contexts within FileMan in
+which you are allowed to enter a string that looks like such an
+expression.  In other words, there are many places within FileMan
+dialogue where you can use a Computed-Field Expression "on-the-fly",
+without permanently storing that expression in any Data Dictionary. 
+Here are some of the ways "on-the-fly" expressions can be used: 
+ 
+1. PRINT FIELD.  Whenever, within the Print or Search Options, you are asked
+ 
+    FIRST PRINT FIELD:    or
+    THEN PRINT FIELD:
+ 
+you can answer with a Computed expression, e.g.: 
+ 
+    FIRST PRINT FIELD: SEX " " RELIGION;"";L33
+ 
+Notice here that we followed the Computed Expression with ';""', to
+suppress any column heading for this "field", and ';L33' to indicate
+that the length of our computed field can be expected to be as long
+as 33 characters.  
+ 
+2. SEARCH FIELD.   In the 'SEARCH FILE ENTRIES' Option, you can
+answer the 
+ 
+    SEARCH FOR FIELD:
+ 
+question with a Computed Expression.  If the expression is "Boolean"
+(i.e., its value is either true or false), you won't be asked the
+"CONDITION" of the search, because you will have already specified
+that condition.  
+ 
+3. SORTING.   In Print or Search Options, you can answer the 
+ 
+    SORT BY:
+ 
+question with a computed expression.  Here again, if you use a
+"True-False" Computed-Field Expression in answer to "SORT BY:", you
+won't be asked for "START WITH" parameters.  Thus, for example, if
+you wanted to print a list of the names of all patients who are
+Baptists, you could simply enter: 
+ 
+    Select OPTION: PRINT FILE ENTRIES
+    OUTPUT FROM WHAT FILE: PATIENT
+    SORT BY: RELIGION="BAPTIST"    (or RELIGION["BAPTIST")
+    WITHIN RELIGION="BAPTIST", SORT BY:
+    FIRST PRINT FIELD: NAME
+    .
+    .
+    .
+ 
+4. DEFAULT INPUT VALUES.   In the Enter/Edit Option, you can follow
+the "//" or "///" specifiers with a Computed Expression, as mentioned
+previously.  The expression is evaluated for the Entry you are
+inputting, and used as a "variable default value".  Suppose, for
+example, that you wanted to find all patients in a Patient File who
+had no value in the Field called "BENEFICIARY", and for those
+patients, you wanted to "stuff" into the "BENEFICIARY" Field the 
+current contents of their "NEXT OF KIN" Field, with a notation that
+this value was "UNVERIFIED".  The dialogue would look like this: 
+ 
+    Select OPTION: 1  ENTER AND EDIT
+    INPUT TO WHAT FILE: PATIENT//
+    EDIT WHICH FIELD: BENEFICIARY///NEXT OF KIN " (UNVERIFIED)"
+    THEN EDIT FIELD:
+ 
+    Select PATIENT NAME: ^LOOP
+    EDIT ENTRIES BY: BENEFICIARY=""
+    WITHIN BENEFICIARY="", EDIT ENTRIES BY:
+ 
+Notice here that we have actually used two "on-the-fly" expressions:
+one in answer to the "EDIT ENTRIES BY:" query (which is essentially a
+"SORT BY" for looping), and one as the "forced default value" for the
+BENEFICIARY Input Field.  'BENEFICIARY=""' is a true-false
+Computed-Field Expression that means 'the BENEFICIARY value for the
+Patient is null'.  After the above dialogue, the names of such
+Patients would be printed out, and their BENEFICIARY value would
+automatically be set equal to their "NEXT OF KIN" Field value, 
+concatenated with the characters " (UNVERIFIED)".  
+ 
+5. WORD-PROCESSING "|"-WINDOWS.|_|  In inputting text for a
+Word-Processing| data element, one can insert between "|" brackets
+any desired Computed-Field| expression.  This expression will be
+evaluated at the time the Word-Processing text is printed out, and,
+if meaningful, the evaluation will then replace the "|"-window in the
+output on the page.  In our patient file, for example, we| could
+embed within  the 'HISTORY' text a "|"-window containing the same| 
+Computed-Field expression we have used twice above: 
+ 
+    HISTORY:
+    1> PATIENT IS A |SEX|_| |_ _| |_|RELIGION| WHO HAS NO
+    2> APPARENT PROBLEMS.
+ 
+When this "History" was printed out for a Patient who had a SEX value
+of 'MALE' and a RELIGION value of 'CATHOLIC', it would look like: 
+ 
+    PATIENT IS A MALE CATHOLIC WHO
+    HAS NO APPARENT PROBLEMS.
+ 
+  
+ 
+C. FUNCTIONS
+ 
+ 
+As an "element" in any Computed-Field Expression, you can use any of
+a number of functions recognized by FileMan.  A function performs
+some operation that returns another value.  The arguments of the
+function, if recognized, in turn, can be any "elements" such as Field
+Names, Field numbers (preceded with "#"), quoted literals, or even
+other functions.  For example, the SQUAREROOT function takes 64 and
+returns 8, so that if the "AGE" Field of a patient has the value 64,
+"SQUAREROOT(AGE)" would equal 8.  The number of functions available
+within FileMan changes from Version to Version (and can even be 
+augmented by the programmer-user, as explained in the Programmer's
+Manual), but some of the most basic are: 
+ 
+    SQUAREROOT
+    MODULO (takes the first argument modulo the second; thus
+           MODULO(28,3)=1)
+    ABS    (converts negative numbers to positive)
+    MAX    (takes the bigger of two arguments)
+    MIN    (takes the smaller of two arguments)
+    INTERNAL    (returns the "stored" value of a Set-, Date-, or
+           Pointer-type Field)
+    REPLACE(every occurrence of argument #2 with argument #1
+           is replaced by argument #3)
+ 
+Thus, for example, if the Field called NAME contains, for a
+particular Entry, the string "BROWN,JOE", then, 
+ 
+    REPLACE(NAME,",",", ") = "BROWN, JOE"
+ 
+Remembering, from the previous section, that a Computed-Field
+Expression like this one can be used as a "forced default value" in
+the ENTER AND EDIT Option, it is easy to see how one could, by
+"looping", effect a "global search-and-replace" operation using the
+REPLACE function.  
+ 
+A second group of nine functions operates only on Date-type Fields or 
+expressions: 
+ 
+    DAYOFWEEK
+    MONTH
+    DATE
+    YEAR
+    TIME
+    MINUTES
+    NUMMONTH
+    NUMDAY
+    NUMYEAR
+    NUMDATE
+ 
+For example, if a Field called "LAST VISIT DATE" has the value of
+"NOV 21, 1981@9:00" for a given patient, then 
+ 
+    MONTH(LAST VISIT DATE)="NOV, 1981"
+    YEAR(LAST VISIT DATE)="1981"
+    DATE(LAST VISIT DATE)="NOV 21, 1981"
+    TIME(LAST VISIT DATE)="9:00 AM"
+    DAYOFWEEK(LAST VISIT DATE)="MONDAY"
+    NUMMONTH(LAST VISIT DATE)="11"
+    NUMDAY(LAST VISIT DATE)="9"
+    NUMYEAR(LAST VISIT DATE)="81"
+    NUMDATE(LAST VISIT DATE)="11/09/81"
+ 
+A third group of functions is the following: 
+ 
+    TOTAL
+    COUNT
+    MINIMUM
+    MAXIMUM
+    1ST
+    2ND
+    3RD
+    4TH
+ .
+ .
+    LAST
+ 
+These functions operate only on the names of Fields that are
+multiple-valued, or on the names of Files.  Suppose, for example,
+that a given patient has three "ADMISSION DATE"s 
+ 
+    1   JUN 7, 1982
+    2   NOV 21, 1981@9:00
+    3   DEC 11, 1981
+Then,    
+    COUNT(ADMISSION DATE)=3
+    1ST(ADMISSION DATE)="JUN 7, 1982"
+    2ND(ADMISSION DATE)="NOV 21, 1981@9:00"
+    3RD(ADMISSION DATE)="DEC 11, 1981"
+    LAST(ADMISSION DATE)="DEC 11, 1981"
+    15TH(ADMISSION DATE)=""
+ 
+Suppose, additionally, that a "LENGTH OF STAY" Field was associated
+with some of these Admissions.  Then the following are also valid
+functions: 
+ 
+    COUNT(ADMISSION DATE:LENGTH OF STAY)
+    1ST(ADMISSION DATE:LENGTH OF STAY)
+    TOTAL(ADMISSION DATE:LENGTH OF STAY)
+    MINIMUM(ADMISSION DATE:LENGTH OF STAY)
+    MAXIMUM(ADMISSION DATE:LENGTH OF STAY)
+ 
+A fourth group of functions are those having to do with
+"Word-Processing" formatting: 
+ 
+    RIGHT-JUSTIFY
+    DOUBLE-SPACE
+    SINGLE-SPACE
+    PAGEFEED
+    PAGESTART
+    SETPAGE
+    PAGE
+    BLANK
+    INDENT
+    SETTAB
+    WIDTH
+    TOP
+    WRAP
+    NOWRAP
+ 
+We identified most of these in Part B of Chapter VI, above, although
+it was not mentioned there that they are actually Computed-Field
+expressions.  As such, they can be embedded anywhere in a Print
+Template, as well as within "|"-windows in Word-Processing texts. 
+They have no meaning in any other| contexts.  Note the 'PAGE'
+function, which simply takes the value of the current output Page
+number.  Like 'RIGHT-JUSTIFY', 'WRAP', 'NOWRAP', 'TOP', 
+'DOUBLE-SPACE', and 'SINGLE-SPACE', it is an example of a
+Computed-Field "function" which takes zero arguments, and hence is
+written without parentheses.  
+ 
+Two other special functions are 'PREVIOUS' and 'NEXT'.  These return
+Field values from Entries or sub-Entries immediately preceding (in
+the case of PREVIOUS) or immediately following (in the case of NEXT)
+the current Entry.  We illustrate these functions with our sample
+Patient from Chapter IV, who has two DIAGNOSIS Entries: 
+ 
+                              AGE AT
+NAME        DIAGNOSIS         ONSET          PREVIOUS(DIAG)  
+    NEXT(DIAG)              NEXT(DIAG:AGE)
+ -------------------------------------------------------------------------------
+WAGSTROM,R   B-12 DEFICIENCY   20            ANGINA PECTORIS      24
+   ANGINA PECTORIS   24      B-12 DEFICIENCY
+ 
+To obtain a complete listing of current functions, you can use the
+Print Option on the "File of Functions", which is File Number '.5'.  
+ 
+If you know a little MUMPS, you can also use MUMPS functions and
+special variables ($IO, $X, $Y, etc.) as Computed-Field functions. 
+Four commonly used functions, $EXTRACT, $LENGTH, $PIECE, AND $SELECT,
+which are described below.  
+ 
+$EXTRACT: The $EXTRACT (or $E) function extracts a single character
+or series of characters from a string of characters (numbers or
+letters).  The format for extracting a single character is
+$E(string,n) where 'n' is the position of the character you want to
+extract.  For example, $E(PHONE NUMBER,8) will extract the eighth
+character from a phone number.  $E("MALE",1) will extract the first
+character (the 'M') from 'MALE'.  
+ 
+To select a range of characters from a string, the format is as
+follows: $E(Field name or literal,n,y) where 'n' is the first
+number in a range and 'y' is the last number in a range.  Thus,
+$E(SOCIAL SECURITY NUMBER,6,9) will extract the last four characters. 
+So, if the social security number was 661403491, $E would extract
+3491.  
+ 
+$LENGTH:  The $LENGTH (or $L) function allows you to determine the
+length of the value of any Field expression.  The following format is
+used to form a computed-Field expression with the $L function: 
+$L(Field or computed expression).  For example, $L("") would result
+in a length of zero.  $L(PHONE NUMBER), for a Field value of
+(409)386-1123 would result in a length of 13.  $L(SEX RELIGION) for
+Field values of SEX=MALE and RELIGION=CATHOLIC, when joined together
+by the concatenation operator, would result in a length of 12.  
+ 
+$PIECE:  The $PIECE (or $P) function allows you to separate parts of
+a string of characters according to a specified delimiter.  The
+characters can be either literal text strings or numbers, or the
+value of a Field or expression.  To select any part of a string, the
+following format is used:    $P(string,delimiter,number) where the
+'string' is a Field name, either literal or an expression, the
+'delimiter' is the character(s) which separate the string into parts,
+and the 'number' is the number of the part you want to select.  
+ 
+For example, $P(NAME,",",1) would select the last name if the NAME
+values are in the format Lastname,Firstname.  If SSN were entered
+with delimiting dashes, then $P(SSN,"-",3) will select the last four
+digits.  
+ 
+If you want to use the $PIECE function to select a range of string
+parts, use the following format: 
+$P(string,delimiter,number1,number2).  Here the string and delimiter
+are the same as above.  'Number1' is the first string part you want
+to select, and 'number2' is the last string part you want.  For
+example, $P(BL,"/",1,2) where BL=123/456/789, would select the first
+two parts of the string, 123/456.  $P(LNAME-FNAME-MI,"-",2,3) would
+select the last two parts of the string, FNAME-MI.  
+ 
+$SELECT:  The $SELECT function is used to evaluate a set of truth 
+conditions.  Depending on which condition is met, a different value
+associated with that condition will be returned.  The format for an
+expression using the $S is as follows: 
+ 
+   
+$S(CONDITION1:VALUE1,CONDITION2:VALUE2...CONDITIONn:VALUEn,1:DEFAULT) 
+ 
+The $Select function evaluates each condition from left to right. 
+When it finds a condition that is met, it returns the value
+associated with that condition.  The $Select function must always
+find a true condition; therefore, the last 'default' condition should
+always evaluate to true if all preceding conditions are false. 
+Usually, this is done by entering a "1" as the last condition.  
+ 
+For example, you may want to define a computed Field called STATUS to
+evaluate to either PRESENT or ABSENT indicating whether a patient has
+a social security number recorded in the SSN field.  Enter your
+STATUS computed-Field expression as: 
+ 
+    'COMPUTED-FIELD' EXPRESSION: $S(SSN'="":"PRESENT",1:"ABSENT")
+ 
+$S will evaluate the first condition - SSN'="" and when the SSN Field
+has an entry (not null), then the STATUS value returned will be
+"PRESENT".  When no SSN exists, the default condition holds and the
+STATUS value returned will be "ABSENT".  
+ 
+  
+ 
+D. "EXTENDED POINTERS" TO OTHER FILES
+ 
+ 
+In defining a Computed Field, you can refer to data Fields in a 
+differentfile.  Three cases must be considered: 
+ 
+    
+ 
+1)  There is a Field that points to the other File.  
+ 
+2)  There is no such pointer Field, but an Entry in the other
+File can be 
+    'looked-up' based on some value in the current File.  
+ 
+3)  The other File contains a Field that points back to the
+current File.  
+ 
+To take an example of the first case, suppose a "Patient" File has a
+Field called "ATTENDING PHYSICIAN", which points to the "Doctor"
+File.  The "Doctor" File, in turn, has a Field called "SPECIALTY". 
+If we want to create a "computed Field" within the "Patient" Data
+Dictionary that is equivalent to "Doctor's Speciality", we 
+ 
+    'COMPUTED-FIELD' EXPRESSION: ATTENDING PHYSICIAN:SPECIALTY
+ 
+The syntax of this kind of Expression, which we call the Simple
+Extended pointer, is 
+ 
+    pfield:element
+ 
+where 'pfield' is the Name (or number, preceded by "#") of a
+Pointer-valued Field occurring in the File for which we are creating
+the Computed Expression, and 'element' is an "Element" that applies 
+to the File to which 'pfield' points.  This kind of "Extended
+Pointing" allows a FileMan user to make such "relational" queries as
+"list the names of all patients who are older than their attending
+physicians".  Given an "AGE" Field (Numeric-valued or Computed) in
+both the Patient and the "Doctor" Files, the user of the Print Option
+would just enter: 
+ 
+    OUTPUT FROM WHAT FILE: PATIENT
+    SORT BY: NAME// AGE>(ATTENDING PHYSICIAN:AGE)
+    WITHIN AGE>(ATTENDING PHYSICIAN:AGE), SORT BY:
+    FIRST PRINT FIELD: NAME
+    .
+    .
+    .
+ 
+There is an even more powerful "Extended Pointer" capability; which,
+again, can be illustrated with another example.  Suppose that we
+store, in a File called "Factor", a list of factors for calculating
+taxes.  Each Entry Name of this File corresponds to a different pay
+scale.  Now suppose that we also have, in a "Personnel" File, a Field
+called "PAYSCALE", and we want to retrieve, for any Entry in the
+"Personnel" File, the value of a Field "DEDUCTION" in the "Factor"
+Entry that corresponds to this "PAYSCALE".  We type: 
+ 
+    'COMPUTED-FIELD' EXPRESSION: PAYSCALE:FACTOR:DEDUCTION
+ 
+The important thing here is that "PAYSCALE" was not pre-defined as a
+Field "pointing" to the "Factor" File; the linkage to that File is
+made only with the Computed-Field definition.  Note, too, that
+"PAYSCALE" could actually itself be a Computed Field.  The syntax
+here is 
+ 
+    expr:file:element
+ 
+where 'expr' is any Expression that applies to the "pointing" File,
+'file' is the name of any File, or any multiple-valued Field within
+the current File, and 'element' is any Element that applies to the
+File or sub-File named by 'file'.  An alternate allowed form of the
+Extended Pointer syntax is: 
+ 
+    expr IN file FILE:element
+ 
+Thus, the example above could have been entered : 
+ 
+    'COMPUTED-FIELD' EXPRESSION: PAYSCALE IN FACTOR FILE:DEDUCTION
+ 
+Furthermore, if the "Element" being evaluated is Field #.01 (the
+'Name' Field) of the second File, the ":element" part of the
+Expression may be omitted, leaving 
+ 
+    expr:file
+    or
+    expr IN file FILE
+ 
+What actually happens when the value of this "Extended Pointer" is
+calculated is this: 
+ 
+    1) The value of 'expr' is calculated
+    2) This value is used as a look-up value in the File named by 'file'
+    3) If the look-up is successful, 'element' is evaluated for the 'file'
+  Entry found.
+ 
+If the look-up is unsuccessful (for example, if there is a "PAYSCALE"
+in the "Personnel" File that corresponds to no single Entry in the
+"Factor" File), then 'expr' is evaluated as a null ("").  Remember
+that the look-up must find exactly one match, and that it uses the
+same cross-reference(s) that a user-initiated selection would.  Thus,
+to check on whether Payscale "ABC" corresponds to an Entry in the
+"Factor" File, one could just run a FileMan inquiry: 
+ 
+    Select OPTION: INQUIRE TO FILES
+    OUTPUT FROM WHAT FILE: FACTOR
+    Select FACTOR NAME: ABC
+ 
+In database terminology, the "Extended Pointer" capability is very
+similar to a so-called "JOIN" operation, since the user is allowed to
+specify at any time a new relationship between two Files formerly
+unrelated.  Therefore, we call this type of pointing the Join
+Extended Pointer.  
+ 
+To take another example, one could decide to find out if any Entries
+in the "Personnel" File could be matched against 'NAME' Fields in the
+"Patient" File, just by specifying the following Sort: 
+ 
+    OUTPUT FROM WHAT FILE: PATIENT//
+    SORT BY: NAME IN PERSONNEL FILE
+    .
+    .
+    .
+ 
+Word-Processing field names (or numbers, preceded with "#") are
+allowed, when meaningful, as "elements" in Extended-Pointer
+expressions.  In our Patient File, for example, one could define a
+Computed Field equal to 
+ 
+    "B-12 DEFICIENCY":DIAGNOSIS:HISTORY
+ 
+This would be a special kind of Computed Field: a "multi-line"
+computed field.  It would signify, for any Patient, the
+Word-Processing "HISTORY" text associated with that Patient's "B-12
+DEFICIENCY" DIAGNOSIS.  If the Patient has no such Diagnosis (or no
+History associated with it), the "value" of this 
+"multiple-Extended-pointer" expression would be null.  You are
+allowed to use "multiple" Computed Fields: 
+ 
+    1.  As expressions within Word-Processing "| |" windows (Hence
+	one document can call for another document to print out inside
+	it as "boilerplate").
+ 
+    2.  As "default values" for input to Word-Processing data 
+	elements (Hence you can use Option 1 to "stuff" one
+	document into another).  
+ 
+    3.  As the name of a TRANSFER document (in the Word-Processor "T" Option)
+ 
+    4.  As "PRINT FIELDS" in the 'PRINT FILE ENTRIES' Option.  
+ 
+Another kind of "multiple Computed Field" can be used in these four
+contexts.  Its syntax is: 
+ 
+    expr:mul
+ 
+where 'mul' is the Name or Field Number of any multiple-valued Field
+meaningful in the context of the expression 'expr'.  Thus, within our
+Patient File, 
+ 
+    "WAGSTROM":DIAGNOSIS
+ 
+is "equal to" the two lines: 
+ 
+    B-12 DEFICIENCY
+    ANGINA PECTORIS
+ 
+This syntax is particularly useful in pulling data from Files
+"pointed to" by other Files.  For example, if we had a File of
+RADIOLOGY EXAMS, each of which had a Pointer to the Patient File,
+then, in listing Entries in the RADIOLOGY EXAM File, we could ask to
+have printed: 
+ 
+    THEN PRINT FIELD: PATIENT:DIAG
+ 
+and a multi-line output of DIAGNOSIS sub-Entries from the pertinent
+Patient Entry would appear on the printout (as above, for the Patient
+WAGSTROM).  
+ 
+What if we wanted to go "the other way"?  Suppose we were in the
+PATIENT File and wanted to list, for certain patients, each of their
+RADIOLOGY EXAMS?  This leads us to the third type of Extended Pointer
+syntax: the Backwards Extended Pointer.  A "Backward-Pointer"
+Computed expression is written simply as the name of a File.  To be
+valid, however, the File named must contain within its definition a
+Pointer Field which points to the current File.  Furthermore, that
+Pointer Field must be cross-referenced (See Chapter VIII.B.).  If the
+Pointer Field is in a subfile, then the "whole file" must be 
+cross-referenced by the Pointer.  
+ 
+Take the example above.  Within the RADIOLOGY EXAM File we have a
+Field called PATIENT pointing back to our PATIENT File.  Suppose we 
+cross-reference that PATIENT Pointer.  Now we enter the PATIENT File,
+and, for each patient, we want to list the RADIOLOGY EXAM Entry names
+that point back to that patient.  All we have to type is: 
+ 
+    THEN PRINT FIELD: RADIOLOGY EXAM
+ 
+Since there may be several RADIOLOGY EXAM Entries for a given
+patient, this is another example of a "multi-line" Computed Field.  
+ 
+ 
+ 
+VA FileMan  V.17 - Apr 1986                       User's Manual        (22)
+
+
+
+
+E.  "RELATIONAL JUMPS" ACROSS FILES
+ 
+ 
+To review the previous section, we have now defined three types of
+"Extended Pointers": 
+ 
+    TYPE       EXAMPLE    	            MEANING
+ 
+1.  SIMPLE    ATTENDING PHYSICIAN:AGE	Use the 'ATTENDING PHYSICIAN'
+                                     	Pointer field to get to the 
+                                     	DOCTOR file.  
+ 
+2.  JOIN PAYSCALE:FACTOR:DEDUCTION   	Use the 'PAYSCALE' Field as a
+                                    	lookup value on the FACTOR File.
+ 
+3.  BACKWARDS RADIOLOGY EXAM	        Go to the RADIOLOGY EXAM File,
+                                     	and find those Entries which have
+                                     	(cross-referenced) Pointers back to 
+					the entry in the (PATIENT) File from 
+					which we are starting.  
+ 
+Each of these types of pointing corresponds to a way in which FileMan
+allows the user to 'navigate' from one File to another.  The SEARCH,
+SORT, PRINT, and ENTER/EDIT components of the FileMan package all
+allow using these types of pointers to cross File boundaries, and
+effectively treat an Entry in a second File as though it were a 
+subfield of the original file.  
+ 
+The key syntax for this "Relational Jumping" is a terminating colon
+(:).  We therefore have three types of Relational Jump: 
+ 
+    TYPE                            EXAMPLE
+ 
+1.  Simple                     ATTENDING PHYSICIAN:
+2.  Join                       PAYSCALE:FACTOR:
+3.  Backwards                  RADIOLOGY EXAM:
+ 
+Any of these three types of responses can be made at any of four key
+spots within the FileMan dialogues: 
+ 
+    1.  In the ENTER/EDIT Option, at the question
+    
+    	EDIT WHICH FIELD:
+    
+    2.  In the SEARCH Option, at the question
+    
+    	SEARCH FOR FIELD:
+    
+    3.  In the PRINT and SEARCH Options, at the question
+    
+    	SORT BY:
+    
+    4.  In the PRINT and SEARCH Options, at the question
+    
+    	PRINT FIELD:
+ 
+Within the Enter/Edit Option of FileMan, for example, the user is
+allowed to respond to the prompts as follows: 
+
+      INPUT TO WHAT FILE: PATIENT
+    
+      EDIT WHICH FIELD: NAME
+      THEN EDIT FIELD: ATTENDING PHYSICIAN:
+      EDIT WHICH DOCTOR FIELD: ALL// DEA
+      THEN EDIT DOCTOR FIELD: NAME;"PHYSICIAN NAME"
+      THEN EDIT DOCTOR FIELD: NICKNAME
+      THEN EDIT DOCTOR FIELD:
+      THEN EDIT FIELD:
+ 
+Here, because of a Pointer linkage between the ATTENDING PHYSICIAN
+field in the original PATIENT File and the DOCTOR File, the user can
+specify that he wants, for each of those patients whom he will
+subsequently select, to edit the patient's NAME, and then to edit
+some information about that patient's ATTENDING PHYSICIAN.  
+ 
+Similarly, the user can take advantage of the cross-reference
+"backward pointer" from RADIOLOGY EXAM to PATIENT: 
+ 
+    INPUT TO WHAT FILE: PATIENT
+    
+    EDIT WHICH FIELD: NAME
+    THEN EDIT FIELD: RADIOLOGY EXAM:
+    WILL TERMINAL USER BE ALLOWED TO SELECT PROPER ENTRY IN
+ 'RADIOLOGY EXAM' FILE? YES//    (YES)
+    DO YOU WANT TO PERMIT ADDING A NEW 'RADIOLOGY EXAM' ENTRY?
+  NO//    (NO)
+     EDIT WHICH RADIOLOGY EXAM FIELD: 
+ 
+Here, the user specifies that he wants to edit a patient's name, and
+then to select one of the RADIOLOGY EXAMS which point back to that
+patient, and then to edit other data within that selected Entry in
+the RADIOLOGY EXAM File.  
+ 
+Having 'navigated' over to the second File, one can use another
+Extended Pointer to move to still a third File.  Each File, for the
+purpose of this editing sequence, is considered to be a Subfile of
+the original, so that when no more Fields within the second File are
+specified, the dialogue "falls back" to the original File.  Thus, to
+continue the above dialogue: 
+ 
+    THEN EDIT WHICH RADIOLOGY EXAM FIELD: DATE OF EXAM
+    THEN EDIT WHICH RADIOLOGY EXAM FIELD: RESULTS
+    THEN EDIT WHICH RADIOLOGY EXAM FIELD:
+    THEN EDIT FIELD: ATTENDING PHYSICIAN
+    THEN EDIT FIELD:
+    STORE THESE FIELDS IN TEMPLATE: PATIENT-EXAM
+    
+    Select PATIENT NAME: BROWN,JOE
+    NAME: BROWN,JOE//
+    Select RADIOLOGY EXAM: ?
+    CHOOSE FROM:
+    1.   DEC 4, 1984
+    2.   OCT 1, 1985
+    CHOOSE 1-2: 2
+    DATE OF EXAM: OCT 1, 1985//
+    RESULTS: NORMAL
+    ATTENDING PHYSICIAN: SMITH//
+ 
+Note that the only RADIOLOGY EXAMS the user was allowed to choose
+from were the two which pointed back to the selected patient (BROWN).  
+ 
+Note, too, that a user cannot "cross File boundaries" on input unless
+he has WRITE ACCESS to the File to which he moves.  This applies to
+the creator of this "PATIENT-EXAM" Input Template, and also to any
+subsequent user of the Template.  
+ 
+ 
+VA FileMan  V.17 - Apr 1986                       User's Manual        (23)
+
+
+               X.  DATA SECURITY
+
+ 
+ 
+ 
+A.  ACCESS TO FILES, FIELDS AND TEMPLATES
+ 
+ 
+FileMan includes facilities for screening out user access to entire
+Files, and to data within Files on an Field-by-Field basis.  It does
+this by associating a 'FileMan Access Code' with every system user. 
+This Access Code (which a programmer may pre-define -- see
+Programmer's Manual) is simply a string of characters that correspond
+to functional data access categories.  For example, "A" might
+correspond to entry/editing of Administrative data, "a" might 
+correspond to viewing of Administrative data, "F" might correspond to 
+entry/editing of Fiscal data, and "f" to viewing of Fiscal data. 
+Typically, the user goes through a password-checking sign-on routine
+prior to using FileMan, and this routine would set his Access Code
+equal, for example, to "Aaf" if he were identified as one entitled to
+view and change Administrative data, but only to view (search &
+print) Fiscal data.  Lacking any such "security clearance", the
+default value of the Access Code is simply null.  
+ 
+FileMan uses the Access Code to control access to Files in five
+different ways: 
+ 
+A "READ ACCESS"      code controls use of the File by PRINT, 
+                     SEARCH, INQUIRE, STATISTICS, and LIST 
+                     FILE ATTRIBUTES Options of FileMan.  
+ 
+A "WRITE ACCESS"     controls use of ENTER/EDIT Option.  
+ 
+A "DELETE ACCESS"    controls deletion of an entire Entry, in 
+                     the ENTER/EDIT Option, and also the 
+                     Transfer of Entries, within the TRANSFER 
+                     ENTRIES Option.  
+ 
+A "LAYGO ACCESS"     controls creating a new entry, within the 
+                     ENTER/EDIT Option.  A user must have 
+                     LAYGO as well as WRITE access to a File 
+                     to add new Entries.  Also, the user must 
+                     have WRITE access to all REQUIRED 
+                     IDENTIFIERS.  
+ 
+A "DD ACCESS"        (Data Dictionary) controls use of the 
+                     MODIFY and UTILITY Options.  
+ 
+All these controls are based on the value of the Access Code. 
+When a user comes to access a File, under any of these options,
+he will not be allowed to access any File that is
+"File-Protected" unless his current Access Code either equals
+"@" or contains at least one character in common with the
+Protection code string.  
+ 
+Any new File created by a user with a code string in the Access
+Code will automatically be given READ, WRITE, DELETE, LAYGO, and
+DD access codes equal to that code string.  To change these
+codes later, go into the "EDIT FILE" suboption of the "FileMan
+Utilities Option" (#6), but be sure that, when you do so, your
+own Access Code contains any codes you want to add, or else is 
+equal to "@".  
+ 
+The Access Code is also checked to control access to data Fields
+within each file: 
+ 
+1. WRITE ACCESS.    The "ENTER OR EDIT FILE ENTRIES" option and the "MODIFY 
+               FILE ATTRIBUTES" option look at the 'Write Access' for 
+               every Field used, if the Write Access has been defined.  
+               If a Field's Write Access code has no characters in 
+               common with the user's Access Code, the user will not be 
+               able to "see" that Field.  
+ 
+2. DELETE ACCESS.   The "ENTER/EDIT" option looks at the 'Delete Access' of a 
+               field when a user is trying (with the "@") to delete a 
+               value for that Field.  If there is such a 'Delete Access' 
+               string, and if it has no characters in common with the 
+               user's Access Code, the user will be prohibited from 
+               deleting.  A 'Delete Access' on an entire File is 
+               equivalent to having the same code string as the 'Delete 
+               Access' for the ".01" Field of that File.  
+ 
+3. READ ACCESS.The "INQUIRY", "PRINT", and "SEARCH" options look at the 
+               'Read Access' for every Field called for. Again, if this 
+               'Read Access' code has no characters in common with the 
+               user's Access Code, the user cannot see data stored in 
+               such a Field.  
+ 
+Again, the exception to the above is that if the invoking
+program has set the Access Code equal to the single "@"
+character, all Fields will be accessible.  "@" is thus the
+"programmer's access code" to the entire Data Dictionary.  
+ 
+To enter or edit a Field's READ, DELETE, or WRITE access, simply
+enter the "MODIFY ATTRIBUTES" Option (#4), indicate the Field to
+be protected, and enter the desired codes when asked for "READ
+ACCESS", "DELETE ACCESS", and "WRITE ACCESS".  Again, any code
+character entered must be in your current Access Code, unless
+you have the "@" code.  
+ 
+Finally, when a user creates an Input Template (Enter/Edit
+Option) or a Print Template (Print Option), his access code is
+assigned to that Template for "Read Access" and "Write Access". 
+Any subsequent user of the Template must have a code that has a
+character in common with the stored "Read Access".  Anyone who
+is subsequently allowed to change the Template must have a code 
+with a character in common with the stored "Write Access".  When
+the Template is changed, these access codes can be changed, too.  
+ 
+Listing File #.4 -- the PRINT TEMPLATE File -- and File #.402 --
+the INPUT TEMPLATE File -- can display the READ ACCESS and WRITE
+ACCESS fields for any or all Templates.  
+ 
+ 
+ 
+VA FileMan  V.17 - Apr 1986                         User's Manual        (24)
+
+
+
+
+B.  ACCESS TO SEARCH RESULTS
+ 
+ 
+FileMan also keeps track of a 'User Number', which, like the
+Access Code, can be pre-set.  It should correspond to an
+individual user.  FileMan uses the User Number as follows: 
+ 
+1. In the Search routine, if the User Number is non-zero, the
+user will be asked: 
+ 
+    STORE RESULTS OF SEARCH IN TEMPLATE:
+ 
+Here, the user can enter a free-text name (e.g. "DIGITALIS
+RESEARCH 1") under which he wishes to be able to recall the
+results of the search he is initiating.  Merely pressing
+'RETURN' at this point means, naturally, that he does not wish
+to save the numbers of the Entries found.  
+ 
+2. In the Search routine, if the User Number is non-zero and if
+that user number has been used in "saving" a previous search,
+the same Boolean search algorithm can be invoked again (on the
+same File, of course) by simply typing the 'Template' name in
+brackets at the beginning of the search specification dialogue: 
+ 
+    -A- SEARCH FOR FIELD: [DIGITALIS RESEARCH #1]
+ 
+3. If a particular user has saved some "search results" under a
+Template name, he can do any kind of re-printing or re-searching
+of those Entries (i.e., either the Print or Search Option) by
+answering the 'SORT BY' query with a bracketed Template Name: 
+ 
+    SORT BY: NAME// [DIGITALIS RESEARCH #1]
+ 
+Here "DIGITALIS RESEARCH #1" is again the 'Template Name'
+specifying the Entries he has in mind.  Note again that if a
+user's DUZ is not greater than zero, he will not be able to
+store searches in a template.  
+ 
+The subsequent print or search will then be done only for
+Entries previously saved in that Template.  Entries are saved by
+printing the search results.  Thus, for search templates,
+FileMan stores the template logic as well as File Entry
+identifiers that satisfied the search conditions.  For sort
+templates or when the user does not print after specifying the
+search conditions, only the logic is stored.  For this reason,
+search templates are useful for retrospective review of changes
+in File Entries.  For example, a search template could be used
+every three months to compare interim changes.  
+ 
+File #.401 is the FileMan File of SORT TEMPLATES.  The READ
+ACCESS, WRITE ACCESS, and USER # fields of this File can be
+printed out for any or all Sort Templates.  
+ 
+VA FileMan  V.17 - Apr 1986                       User's Manual        (25)
+
+
+
+
+           XI.  TRANSFERRING ENTRIES
+ 
+ 
+ 
+ 
+
+A. TRANSFERRING WITHIN THE SAME FILE
+ 
+ 
+It sometimes happens that the user will want to "merge" the data
+contained in two different Entries into one of the two, deleting
+the second one.  This happens in a Patient database, for
+example, when the same patient has been inadvertently entered
+twice, with slightly variant spellings of his name.  The 
+"TRANSFER ENTRIES" Option would allow merging the two existing
+records into one.  
+ 
+After identifying the input and output File as the same, one
+next identifies the two Entries.  Data values are then
+transferred from the "FROM" Entry to the "TO" Entry.  The
+dialogue is simple: 
+ 
+INPUT TO WHAT FILE: PATIENT
+TRANSFER FROM WHAT FILE: PATIENT//
+TRANSFER DATA INTO WHICH PATIENT: RECIPIENT, ROGER
+TRANSFER DATA FROM PATIENT: SENDER, SAM
+WANT TO DELETE THIS ENTRY AFTER IT'S BEEN TRANSFERRED? NO//
+ 
+If the "TO" Entry ("Roger Recipient") already has a value on
+file for a given Field, that value will be preserved (i.e., it
+will not be overwritten by the corresponding Field value in the
+"FROM" Entry).  This rule applies to Word-Processing data
+Fields, too: if the "recipient" has any text on file, 
+corresponding text from the "sender"s Entry is not merged with
+it.  
+ 
+In the case of distinct multiple-valued sub-Fields, however,
+(for example, two different 'DIAGNOSIS' sub-Entries), merging 
+will take place.  Thus, if "Roger Recipient" has "ANGINA" on
+file, and "Sam Sender" has "DIABETES", Roger ends up with both
+Angina and Diabetes.  
+ 
+ 
+ 
+B. TRANSFERRING FROM ONE FILE TO ANOTHER
+ 
+ 
+The 'TRANSFER ENTRIES' Option can also be used to move all or a
+group of Entries from one File to an entirely separate File. 
+This is done by answering the "INPUT TO WHAT FILE:" and the
+"TRANSFER FROM FILE:" queries with separate File names.  Only
+data Fields which have the same Label in each File will be 
+transferred.  You are also allowed to specify the order (BY:
+NAME, or whatever) in which you want the Entries transferred,
+and whether or not the Entries should be deleted from the "FROM"
+File as they are transferred.  You also specify whether you want
+"duplicates" (e.g., a 'JONES,JOHN' patient in both the source
+File and the Target File) to be "merged" when the transfers are
+made, or whether each transferred Entry and sub-Entry shall
+become a distinct new Entry in the target File.  
+ 
+Note that the "TRANSFER ENTRIES" option can be used as a "file
+purge" routine: one can define an "Archive" File containing a
+subset of the Fields that are in the "real" File (perhaps just
+"NAME", "SSN", & "DOB", for example); one can then simply
+transfer into this separate File a selected group of entries
+from the "real" File, deleting them as they are transferred.  
+ 
+Note too, that, if your answer to "INPUT TO WHAT FILE:" is a
+brand-new File, you will be asked: 
+ 
+DO YOU WANT TO TRANSFER OLD DATA DICTIONARY INTO YOUR NEW FILE?
+ 
+Answering 'YES' here effectively causes the immediate "cloning"
+of the data description of the entire File.  Then, if the "old"
+File has had input templates or print templates created for it
+within the Enter/Edit or Print Options, you will be asked: 
+ 
+DO YOU WANT TO COPY OLD PRINT AND INPUT TEMPLATES INTO YOUR NEW FILE?
+ 
+The Transfer Entries Option should obviously be used with care. 
+FileMan will not allow transferring of Entries from a File for
+which the user does not have "Delete Access".  
+ 
+VA FileMan  V.17 - Apr 1986                       User's Manual        (26)
+
+
+
+
+        XII.  "TRIGGERING" DATA CHANGES
+
+
+
+
+ 
+A "Trigger" can be set up when it is desired that data entry
+into one Field automatically cause updating of a second Field
+value.  A "Trigger" is considered to be a kind of
+Cross-reference on the Field for which data is entered, and
+hence is created under the "Cross-reference a Field" Utility in 
+the Utility Functions Option of FileMan.  
+ 
+To understand how a Trigger is set up, one must understand that
+every Cross-reference specification describes both: 
+ 
+1) What happens when a new Field value is entered
+2) What happens when an old Field value is changed or deleted
+ 
+In other words, when patient "SMITH,JACK" is first entered into
+a File of Patients, a "SMITH,JACK" Cross-reference on the name
+is built (and nothing is deleted).  Then, when this name is 
+edited to be "SMITH,JOHN Q", two things happen: 
+ 
+1) The "SMITH,JACK" Cross-reference is deleted
+2) A "SMITH,JOHN Q" Cross-reference is created
+ 
+Finally, when this patient is deleted from the File, the
+"SMITH,JOHN Q" Cross-reference is deleted (and none is created).  
+ 
+When specifying a "Trigger", then, the Utility Functions Option
+user must specify both what happens when the Field value in
+question is created, and when it is changed or deleted.  
+ 
+Let us take as a first example, a simple kind of triggering:
+adding a "Time & Date stamp" to the File whenever a particular
+Field is updated.  Suppose that we have a Patient File for which
+we have created a Date-valued Field called "DATE NAME CHANGED". 
+We want to tell FileMan to put the current date and time into
+this Field whenever a user enters or edits a Patient Name.  Here
+is how this could be done: 
+ 
+
+Select OPTION: UTILITY FUNCTIONS
+ 
+MODIFY WHAT FILE: PATIENT         (1890 entries)
+Select UTILITY OPTION: CROSS-REFERENCE A FIELD
+Select FIELD: NAME
+ 
+CURRENT CROSS-REFERENCE IS REGULAR 'B' INDEX OF FILE
+WANT TO DELETE IT? NO//   (NO)
+WANT TO CREATE A NEW CROSS-REFERENCE FOR THIS FIELD? NO// Y  (YES)
+CROSS-REFERENCE NUMBER: 2//
+Select TYPE OF INDEXING: REGULAR// TRIGGER
+ 
+WHEN THE 'NAME' FIELD OF THE 'PATIENT' FILE IS CHANGED,
+WHAT FIELD SHOULD BE 'TRIGGERED': DATE NAME CHANGED   ..OK
+ 
+---SET LOGIC---
+ 
+IN ANSWERING THE FOLLOWING QUESTION, 'DATE NAME CHANGED'
+  CAN BE USED TO REFER TO THE EXISTING TRIGGERED FIELD VALUE.
+PLEASE ENTER AN EXPRESSION WHICH WILL BECOME THE VALUE OF 
+ THE 'DATE NAME CHANGED' FIELD OF THE 'PATIENT' FILE
+ WHENEVER 'NAME' FIELD IS ENTERED OR CHANGED: NOW
+ 
+DO YOU WANT TO MAKE THE SETTING OF 'DATE NAME CHANGED' CONDITIONAL? NO//(NO)
+ 
+---KILL LOGIC---
+ 
+IN ANSWERING THE FOLLOWING QUESTION, 'DATE NAME CHANGED'
+  CAN BE USED TO REFER TO THE EXISTING TRIGGERED FIELD VALUE.
+  NOTE: 'OLD NAME' CAN BE USED TO REFER TO THE VALUE OF THE
+  NAME FIELD BEFORE ITS CHANGE OR DELETION.
+PLEASE ENTER AN EXPRESSION WHICH WILL BECOME THE VALUE OF 
+ THE 'DATE NAME CHANGED' FIELD OF THE 'PATIENT' FILE
+ WHENEVER 'NAME' IS CHANGED OR DELETED:    NO EFFECT
+ 
+WANT TO PROTECT THE 'DATE NAME CHANGED' FIELD, SO THAT
+IT CAN'T BE CHANGED BY THE 'ENTER & EDIT' ROUTINE? NO//  YES
+...CROSS-REFERENCE IS SET
+ 
+DO YOU WANT TO RUN THE CROSS-REFERENCE FOR EXISTING ENTRIES NOW? NO//  (N0)
+ 
+
+Down to the "KILL LOGIC", this example should be clear: we
+specify that the "NAME" Field will "trigger" the "DATE NAME
+CHANGED" Field (noting that the "NAME" Field is already
+cross-referenced in the usual way), and that the current
+date/time ("NOW") is to be "stuffed" into the triggered Field. 
+Since this triggering will occur whenever "NAME" is changed, we
+don't have to specify anything else that depends on the value of
+the "old" NAME.  And certainly when the entire patient is
+deleted, his "DATE NAME CHANGED" will be deleted along with his
+name.  So we make a null answer to the "KILL LOGIC" query, to
+which the response "(NO EFFECT)" is displayed.  We pass by the 
+option of specifying a condition under which the trigger is to
+take place (we want it always to occur when 'NAME' is changed,
+although not every Trigger always has to occur), and we specify,
+finally, that the only way we want the "DATE NAME CHANGED" Field
+to be updated is via this Trigger.  Thus, no Enter/Edit Option
+user (not even a user with a "Programmer code") will be able to
+change a Patient's "DATE NAME CHANGED" Field through FileMan.  
+ 
+A "Trigger" can also update a Field in a different File than the
+File in which the edited data occurs.  To illustrate this, let
+us take the previous example and show how we could update a
+separate "AUDIT" File whenever a Patient Name is added or
+changed.  We would first define this Audit File, of course, in
+the Modify File Attributes Option of FileMan.  We could define
+the Name Field of this File to contain whatever new Patient Name
+was created, and the "TIME" Field to contain the Date/Time at
+which it was created.  At this point we would go to the Utility
+Functions Option: 
+ 
+ 
+VA FileMan  V.17 - Apr 1986                         User's Manual        (27)
+
+
+
+
+
+MODIFY WHAT FILE: PATIENT
+Select UTILITY OPTION: CROSS-REFERENCE A FIELD
+Select FIELD: NAME
+ 
+CURRENT CROSS-REFERENCES:
+    1    REGULAR 'B' INDEX OF FILE
+    2    TRIGGER OF THE 'DATE NAME CHANGED' FIELD
+ OF THE PATIENT FILE
+WANT TO DELETE ONE OF THEM? NO//    (NO)
+WANT TO CREATE A NEW CROSS-REFERENCE FOR THIS FIELD? NO// YES
+CROSS-REFERENCE NUMBER: 3//
+Select TYPE OF INDEXING: REGULAR// TRIGGER
+ 
+WHEN THE 'NAME' FIELD OF THE 'PATIENT' FILE IS CHANGED,
+WHAT FIELD SHOULD BE 'TRIGGERED': NAME:AUDIT:TIME
+DO YOU WANT TO PERMIT ADDING A NEW 'AUDIT' ENTRY? NO// Y   (YES)
+WELL THEN, DO YOU WANT TO **FORCE** ADDING A NEW ENTRY
+                             EVERY TIME? NO// Y   (YES)
+  ...OK
+ 
+---SET LOGIC---
+ 
+IN ANSWERING THE FOLLOWING QUESTION, 'TIME' 
+  CAN BE USED TO REFER TO THE EXISTING TRIGGERED FIELD VALUE.
+PLEASE ENTER AN EXPRESSION WHICH WILL BECOME THE VALUE OF
+ THE 'TIME' FIELD OF THE 'AUDIT' FILE
+ WHENEVER 'NAME' IS ENTERED OR CHANGED: NOW
+ 
+DO YOU WANT TO MAKE THE SETTING OF 'TIME' CONDITIONAL? NO//    (NO)
+ 
+---KILL LOGIC---
+ 
+IN ANSWERING THE FOLLOWING QUESTION, 'TIME'
+  CAN BE USED TO REFER TO THE EXISTING TRIGGERED FIELD VALUE.
+  NOTE: 'OLD NAME' CAN BE USED TO REFER TO THE VALUE OF THE
+  NAME FIELD BEFORE ITS CHANGE OR DELETION.
+PLEASE ENTER AN EXPRESSION WHICH WILL BECOME THE VALUE OF
+ THE 'TIME' FIELD OF THE 'AUDIT' FILE
+ WHENEVER 'NAME' IS CHANGED OR DELETED: @
+ 
+ARE YOU SURE YOU WANT TO 'ADD A NEW ENTRY' WHEN THIS KILL
+                                   LOGIC OCCURS? NO// Y  
+(YES)  
+ 
+DO YOU WANT TO MAKE THE DELETING OF 'TIME' CONDITIONAL? NO//   (NO)
+ 
+WANT TO PROTECT THE 'TIME' FIELD, SO THAT
+IT CAN'T BE CHANGED BY THE 'ENTER & EDIT' ROUTINE? NO//    (NO)
+...CROSS-REFERENCE IS SET
+ 
+DO YOU WANT TO RUN THE CROSS-REFERENCE FOR EXISTING
+                                       ENTRIES NOW? NO//   
+(NO) 
+ 
+This example shows that we can use "Extended-Pointer" syntax
+(see Chapter VIII.D.) to specify a Field in another File.  We
+are saying that we want to use the Patient's NAME as a Look-up
+value into the "Audit" File, and, more than that, that we always
+want to create a new Audit Entry that has this NAME value when
+we are Triggering.  In a sense, this Trigger then really updates
+two Fields in "Audit": the NAME and the TIME.  
+ 
+An alternative syntax understandable to FileMan is NAME IN AUDIT
+FILE:TIME. This is exactly equivalent to NAME:AUDIT:TIME, and
+may better express the meaning of the extended syntax to the
+novice user.  
+ 
+Note also how we indicate that a Field is to be deleted rather
+than created when "triggered".  Care must obviously be taken in
+setting up any Trigger Cross-reference, since unexpected effects
+can sometimes result.  Note that at the moment when the Trigger
+actually occurs, 
+ 
+a. No validity check is made on the value being forced into the Field
+(in other words, it doesn't go through the Triggered Field's "Syntax Check")
+ 
+b. Cross-references (if any) do occur on the triggered Field
+(A Triggered Field can in turn trigger other Fields in a chain reaction!)
+
+
+#$#
+ 
+
+

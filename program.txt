@@ -1,0 +1,1768 @@
+
+ 
+VA FileMan  V.17 - Apr 1986           Programmer's Manual  (1)
+
+                   V A   F I L E M A N
+                   PROGRAMMER'S MANUAL
+                Version 17 - April, 1986
+ 
+                        CONTENTS
+ 
+    I.   SETTING UP FILEMAN
+ 
+    II.  MUMPS PROGRAMMING CONVENTIONS
+     	A. Routine Size
+     	B. Non-Standard MUMPS Features
+     	C. Other Routines Used
+     	D. Routine and Variable Names
+     	E. First-Line Documentation
+     	F. Semicolon Lines within Routines
+     	G. Continuation Routines
+     	H. Argument-Passing Variables
+     	I. Delimiters within Strings
+ 
+    III. GLOBAL FILE STRUCTURE
+     	A. File Entries
+     	B. Cross-references
+     	C. File Descriptor
+     	D. Attribute Dictionary
+	 
+    IV.  PROGRAMMER ROUTINES
+     	A. File Lookup ('DIC')
+     	B. Data Edit ('DIE')
+     	C. Data Print ('DIP')
+     	D. Data Display ('DIQ')
+     	E. Word-Processing Formatting and Output ('DIWP')
+     	F. Form Document Print ('DIWF')
+     	G. File Re-crossreference and
+        	Entry Deletion ('DIK')
+     	H. Date Conversion ('%DT')
+     	I. Date Compare ('%DTC')
+     	J. MUMPS Validation ('DIM')
+ 
+    V.   ADVANCED FILE-DEFINITION FEATURES
+     	A. Storing Data in a Global Other Than '^DIZ'
+     	B. Assigning Where Fields Are Stored in a Global
+     	C. Assigning 'Sub-Dictionary' Numbers
+     	D. MUMPS 'Computed Fields'
+     	E. "Screened" Pointers
+     	F. "Input Transform"
+     	G. "Output Transform"
+ 
+    VI.  OTHER PROGRAMMER UTILITIES
+     	A. Creating Functions
+     	B. Code Generation - Input Routines
+     	C. Code Generation - Output Routines
+     	D. Creating Routines "Packages" for Export
+	 
+ 
+VA FileMan  V.17 - Apr 1986      Programmer's Manual  (1)
+
+
+
+
+                      I.  SETTING UP FILEMAN
+ 
+
+VA FileMan consists of approximately 150 MUMPS routines.  These routines, as 
+they are run, set up all the MUMPS Globals that they require.
+ 
+One of the VA FileMan routines is called "DINTEG".  It will be seen to contain a
+list of all the routine names in the package.  If your MUMPS system allows use 
+of the "ZLOAD" command, you can run "DINTEG" to check on the "integrity" of the
+routines you have loaded.  If "DINTEG" detects any discrepancy between the 
+number of bits it thinks a routine should contain, and the number in the 
+routine on file, it will display a message, which will look something like:
+ 
+    DIC ROUTINE IS OFF BY 123 BITS
+ 
+Such messages indicate that your copy of VA FileMan is not identical to the one
+distributed by the developer.  In this case, your most prudent course is to
+obtain a fresh copy of the routines.
+ 
+After first loading the VA FileMan routines, the routines called "DIDT", 
+"DIDTC", and "DIRCR" must be re-filed in the manager's account (UCI) with the 
+names "%DT", "%DTC", and "%RCR", respectively.  A device-selection routine 
+called "%ZIS" must also be present on your system (see Chapter II, Section C).  Either:
+         
+           
+          1. You already have a "%ZIS" (supplied to VA and "Kernel"
+             users).  You're all set.
+           
+          2. You have a device selection routine supplied by your MUMPS
+             vendor.  You may use the routine provided that it returns the
+             variables expected by VA FileMan from such a device selection
+             program.  These variables are listed in Chapter II, Section
+             C.  In this case you can simply create a "%ZIS" routine which
+             calls the vendor supplied routine.
+           
+          3. You do not have a device selection routine.  Re-file the
+             routine "DIIS" as your temporary "%ZIS" routine.  This will
+             mean that all VA FileMan output will go to the terminal that
+             requests it, and will assume that the terminal is a 24-line
+             CRT.  Later on, you may want to write your own version of
+             "%ZIS", following the input/output conventions set forth in
+             Chapter II, Section C.
+          
+ 
+Run the "DINIT" routine.  It will ask you for an (arbitrary) site name and
+number, pause for 1-90 minutes, and then ask you for the
+ 
+        TYPE OF MUMPS SYSTEM YOU ARE USING:
+ 
+Type a "?" at this point to see your possible choices ("DSM", "M/11", "M/VX",
+"MICRONETICS", etc.).  If you don"t see your MUMPS operating system vendor
+listed, or are unsure, enter "OTHER" in answer to this query.  You can always
+re-run the "DINIT" routine (although other users should be off the system when
+you do), to re-answer its questions.  In fact, you must re-run "DINIT"
+whenever you load a new Version of VA FileMan.
+ 
+VA FileMan is now ready to use.  "DI" is the general Option driver (see User 
+Manual, Chapter III).  To restrict user access to files and fields (User 
+Manual, Chapter X), you can have a MUMPS routine set the local variables "DUZ" 
+and "DUZ(0)" before calling "DI".
+ 
+A note on installing VA FileMan under Digital Equipment Corporation's "DSM": 
+Version 2.2 of DSM is not supported by VA FileMan as a special MUMPS Operating 
+System.  If you are running a DSM version with a number lower than 3, answer
+"OTHER" to the "TYPE OF MUMPS SYSTEM YOU ARE USING:" question.  DSM-11 Version 
+3 supports "routine mapping", whereby the Sysgen procedure tells the Operating 
+System to load certain routines permanently into Main Memory.  The VA FileMan 
+routines beginning with "DIFRO*", "DIEZ*" and "DIPZ*" should not be mapped into 
+memory.
+ 
+VA FileMan  V.17 - Apr 1986                         Programmer's Manual  (2)
+
+
+
+
+                 II. MUMPS PROGRAMMING CONVENTIONS
+ 
+ 
+Before proceeding to an explanation of the internal workings of FileMan, we will
+list some general MUMPS programming conventions which have guided the
+organization of the routines comprising FileMan.  A knowledge of the MUMPS
+programming language is presumed throughout the remainder of this manual.
+ 
+ 
+A.  ROUTINE SIZE:
+ 
+Most MUMPS routines in FileMan package do not exceed 2048 characters in size, 
+and none is bigger than 2800 characters.  In most cases, the routines should 
+run in a 8000-character partition.  A very complicated Sort/Print run, however, 
+can take up as much as 10K of stack and local symbol table.  No routine line is 
+longer than 245 bytes.
+ 
+ 
+B.  NON-STANDARD MUMPS FEATURES:
+ 
+"Z-commands" and "Z-functions" are avoided throughout FileMan routines.  For
+certain purposes (such as allowing terminal "breaking", and spooling to a disk
+"SDP" device), FileMan tries to execute lines of non-Standard MUMPS code out 
+of a "File of operating systems" that it maintains.  The non-Standard code used 
+(if any) depends on the answer to the question:
+ 
+         TYPE OF MUMPS SYSTEM YOU ARE USING:
+ 
+which appears at the end of the 'DINIT' initialization routine.  Answering
+"OTHER" to this question will ensure that FileMan uses only Standard MUMPS code.
+ 
+String-valued subscripts (up to 30 characters long) are used extensively, but
+only in the $NEXT collating sequence approved by the MUMPS Development Committee
+(non-negative integer & fractional canonic numbers collate ahead of all other
+strings).  The "$ORDER" function is used at several points in the code.  Also,
+FileMan routines assume that reference to an undefined global subscript level
+sets the "naked indicator" to that level, rather than leaving it undefined.  In
+all other respects, the FileMan code conforms to the 1977 ANS Standard for the
+MUMPS language.
+ 
+ 
+C.  OTHER ROUTINES USED:
+ 
+FileMan routines make use of four "%" utility routines:
+ 
+%DT & %DTC are used to manipulate date/time data values, which FileMan
+conventionally stores in a "YYYMMDD.HHMM" format, where:
+ 
+    YYY is number of years since 1700 (hence always 3 digits)
+    MM is month number (00-12)
+    DD is day number (00-31)
+    HH is hour number (00-23)
+    MM is minute number (00-59)
+ 
+These utilities are explained in Chapter IV Sections H and I.
+ 
+%RCR is used in a few places to move arrays from local to global storage, and
+vice versa.  %XY^%RCR is invoked with
+ 
+    %X = name of existing array (e.g., "X(") and
+ 
+    %Y = name of target array (e.g., "^UTILITY($J,")
+ 
+The '%RCR' routine is also used by FileMan to save local variables temporarily,
+so that modules may call themselves recursively.
+ 
+%ZIS is called at several points in the routines to select I/O device 
+parameters:
+    
+      
+     IO is returned as the output device name (numeric in DEC systems).  If
+     'IO' is null (""), no input or output occurs.
+      
+     IOM is returned as the margin length (e.g., "80")
+      
+     IOSL is returned as the screen length (e.g., "24")
+      
+     IOF is returned as the indirect argument of a WRITE statement to
+     generate a top-of-page (e.g., "#")
+      
+     IOST is returned as the output device type (e.g. "CRT") If 'IOST'
+     begins with "C", the Inquire, Search, and Print output programs will
+     wait for "return" after each screen's worth of display.  If 'IOST'
+     begins with "P", output will terminate with a page feed.  If 'IOST'
+     contains "SINGLE", output will stop after each page feed, and wait for
+     a 'RETURN' to be hit; if the output terminal is other than the terminal
+     requesting the output, and 'IOST' does not contain "K", the 'RETURN'
+     will be read from the requesting terminal.
+      
+     IOPAR is returned as the parameter that should follow the first colon
+     in the argument of the OPEN command.  For most devices, this string
+     should be null.
+      
+     IOT may be returned (optionally) equal to a string naming the "terminal
+     type" (for example IOT="TRM").  This variable must be returned equal
+     to the string "SDP" in order for the FileMan "multiple-copies" feature
+     to be called for.
+      
+     IOP can be defined prior to calling %ZIS and if it is equal to a device
+     name when "%ZIS" is invoked, the above parameters are automatically
+     returned, without any terminal interaction.
+     
+ 
+The FileMan package includes versions of these four routines, named "DIDT",
+"DIDTC", "DIRCR", and "DIIS" respectively.
+ 
+ 
+D.  ROUTINE AND VARIABLE NAMES:
+ 
+In keeping with the convention that all programs that are part of the same
+applications or utility package should start with the same two letters, all
+FileMan routine names begin with "DI".  Also, routine "DI" itself is the main
+"Option reader", and "DINIT" is the "Initializer".  Except in these two 
+routines, no unargumented or "exclusive" KILL commands will be found.  
+Furthermore, all multi-character local variable names created by the routines 
+begin with the letter "D" (except that 'IO(0)', by convention, contains the $I 
+value of the sign-on device).
+ 
+Two local variable names, DUZ and DT, are of special importance in the
+routines, since the programmer is allowed to set them prior to invoking FileMan
+modules:
+         
+           
+          DT     if defined, is assumed to be the current date.
+                 (e.g., for June 1, 1985, DT=285061)
+           
+          DUZ    if defined, is assumed to be the 'User Number', a positive
+                 number uniquely identifying the current user.
+           
+          DUZ(0) if defined, is assumed to be the 'FileMan Access Code', a
+                 character string describing the user's "security clearance"
+                 with regard to Read Access, Write Access and Delete Access for 
+                 each File, and, within a File, for each data Field.  Consult
+                 the section on "Data Security" in the FileMan User's Manual,
+                 and note that setting 'DUZ(0)' equal to the single "@" 
+                 character overrides all security checks and allows special 
+                 "programmer" features, as described below.  FileMan sets these
+                 variables, if they are not defined, to the following defaults:
+           
+                        DT = today's date
+                        DUZ = 0
+                        DUZ(0) = <null string>
+          
+ 
+FileMan routines explicitly refer to globals named "^DD", "^DIC", "^DIBT",
+"^DIE", "^DIPT", "^DISV", "^DIZ", "^DOPT", "^DOSV".  The routines also use, for
+temporary "scratch space", the global "^UTILITY".  ^DD stores all Attribute
+Dictionaries.  ^DIC stores the dictionary of files.  ^DIBT stores the results of
+File Searches and SORT Template specifications.  ^DIE stores input templates and
+^DIPT stores output templates.  ^DISV stores (by $I identification) the most
+recent lookup value in any File or Sub-File, for retrieval with the "space-bar"
+input; no harm can occur in killing this global at any time.  ^DIZ stores new
+data of files as they are created.  ^DOPT stores various option lists.  ^DOSV
+stores statistical results.
+ 
+ 
+E.  FIRST-LINE DOCUMENTATION:
+ 
+The tag of the first line of each routine in the package is identical to the 
+name of the routine.  The remainder of each such first line consists of:
+ 
+    ; <Programmer/Site> <Brief Description> ; <Date/Time of last edit>
+ 
+F.  SEMICOLON LINES WITHIN ROUTINES:
+ 
+Logical blocks of code within routines are set off from each other by lines
+consisting only of a semicolon (completely blank routine lines are not allowed 
+by the MUMPS standard).  Lines that are entry points for a DO or GO from other
+routines consist only of a tag and semicolon (usually, the tag is "EN"), so that
+they can be easily noticed.
+ 
+ 
+G.  CONTINUATION ROUTINES:
+ 
+When a routine is "Done" or "Gone to" only from one other routine, then its
+routine name is the same as that of the invoking routine, except for the final,
+numeric character.  Thus, for example, "DIO" is the only routine which calls
+"DIO1".
+ 
+ 
+H.  ARGUMENT-PASSING VARIABLES:
+ 
+When a given routine, subroutine, or Xecutable code string can be thought of as 
+a "black box" that transforms some value into some other value, then the "input
+value" is usually found in the local variable 'X' when the routine is invoked,
+and the "output value" in the local variable 'Y' upon return.  If the 'X' value
+is "rejected" by the black box, then either 'X' is killed within the routine, or
+'Y' is returned with the value of "-1".  When the routine needs other data with
+which to evaluate "X", that data is usually put into a local variable or array
+which has the same name as the routine being invoked.
+ 
+ 
+I.  DELIMITERS WITHIN STRINGS:
+ 
+The "^" character is conventionally used to delimit data elements which are
+strung together to be stored in a single global node.  A corollary of this rule
+is that the routines almost never allow input data to contain up-arrows 
+(remember that the user types "^" to change or terminate the sequence of 
+questions being asked).  Within "^"-pieces, semicolons are usually used as 
+secondary delimiters, and colons as tertiary delimiters.  FileMan routines use 
+the local variable 'U' as equal to the single "^" character.
+ 
+VA FileMan  V.17 - Apr 1986                        Programmer's Manual  (3)
+
+
+
+
+                    III.  GLOBAL FILE STRUCTURE
+ 
+ 
+FileMan stores the data of every "File" descendant from a single MUMPS global
+array (or from a node of a global array).  When the routines, internally and
+externally, make reference to a File in global notation, they expect a format
+like
+ 
+              ^GLOBAL(
+ 
+for an entire global, or
+ 
+              ^GLOBAL(X,Y,
+ 
+note the terminating "(" or ",".  Indirection ("@") is always used by FileMan
+routines in referring to data Files.
+ 
+We will now consider four basic components of a database, and describe, by way 
+of example, how the rudiments of a patient File could be "mapped" into a global
+called "^DPT" using FileMan.  We will assign File Number 2 to this file.
+ 
+ 
+A.  FILE DESCRIPTOR
+ 
+All FileMan files, regardless of the global used for data storage, have an entry
+in the Dictionary of Files - the ^DIC global - descendant from the file's DD
+number.  The zeroth subscript contains the File Name and File Number.  The "GL"
+node descendant from subscript zero is set to the "root" of the global used to
+store data for this file.  Thus for the above Patient file will have the
+following:
+ 
+         ^DIC(2,0)="PATIENT^2"
+         ^DIC(2,0,"GL")="^DPT("
+ 
+A descriptor string is also stored in the zeroth subscript of the File Global
+(^DPT in this example).  This is simply a string containing:  (1) File Name,
+(2) ^DD number, (3) most recently assigned Entry Number, and (4) total number of
+Entries, each separated by up-arrows ("^").  Note that the most recently 
+assigned number is not necessarily the largest Entry Number.  The ^DD number is 
+the number of the Attribute Dictionary (see D. below) that describes the data 
+Fields that this File contains.  Hence, for a File with three patients in it 
+and the most recently added patient was assigned entry number 9, we have:
+ 
+              ^DPT(0)="PATIENT^2^9^3^"
+ 
+ 
+B.  FILE ENTRIES     
+ 
+Each entry in the file corresponds to a positive-valued key subscript, the
+"Internal Entry Number", of the File global.  All Data pertaining to an Entry
+will be stored in global nodes descendant from that subscript.  The Name of an
+Entry is always stored in the first "^"-piece of subscript zero, descendant from
+the "Internal Entry Number" subscript.  Thus, for Entry #1, a patient named 
+"John Jones", we would have:
+ 
+              ^DPT(1,0)="JONES,JOHN^"
+ 
+If we wanted also to store the patient's sex in the 2nd "^"-piece of subscript
+zero, and his date of birth in the third "^"-piece, we would have:
+ 
+              ^DPT(1,0)="JONES,JOHN^M^2341225^"
+ 
+(Where the 7-digit number is our internal way of representing "12/25/1934")
+ 
+How would we store multiple-valued data, such as "Diagnosis", for example?  
+There can be one or five or ten diagnoses on file for a given patient, and they
+obviously cannot all be stored (in the general case) in a single subscript.  Our
+answer is to make the "diagnosis" list a "sub-File" within the patient Entry!
+This requires adding subscripts beyond the first internal key subscript which 
+are different in value from the "0" subscript in which we have chosen to store 
+each patient's name, sex, and birthdate.  For example, if John Jones currently 
+has two (free-text) diagnoses on file, we can consider those to be Entries #1 & 
+#2 in a little 2-Entry File, which we can extend at a lower level from any 
+unused subscript, say from "DX":
+ 
+              ^DPT(1,0)="JONES,JOHN^M^2341225^"
+              ^DPT(1,"DX",0)="^2.01A^2^2"
+              ^DPT(1,"DX",1,0)="DIABETES^"
+              ^DPT(1,"DX",2,0)="ANGINA^"     
+ 
+Notice that the data global "^DPT" has ^DPT(1,"DX",0) for the Diagnosis multiple
+whose 2nd "^"-piece is the same as ^DD(2,3,0) - the Data Dictionary entry for 
+the Diagnosis field in the principal patient dictionary (see Page 12).  This 
+zeroth node of the data global tells FileMan which subsidiary dictionary to use 
+for the data stored in this node.  The actual data (the patient's diagnoses in 
+our example) is stored in the next lower level of subscripting.  In the same 
+manner that entries in the Patient File have internal entry numbers, entries in 
+the multiple field also have "internal entry numbers" in the subfile.  Thus in 
+our example, "DIABETES" is the first entry and "ANGINA" the second.
+ 
+ 
+C.  CROSS-REFERENCES     
+ 
+The MUMPS capabilities of string-valued array subscripting offer a simple,
+general way to cross-reference FileMan files.  To minimize the number of global
+names used by the system, we store each Cross-reference set as a descendant of 
+an alphanumeric subscript of the global File.  A File, such as a patient file, 
+that should be accessible by Name, is set up by the system so that there is a
+subscript "B", which in turn is subscripted by strings corresponding to every
+unique Entry Name currently in the File.  For each such string-valued subscript,
+the next level of subscripting contains the Internal Entry Numbers of the 
+Entries that contain the Name.  Let's suppose, in our previous example, that we 
+have a second patient, patient number 9, who also happens to have the Name John 
+Jones, and a third patient, Internal Number 7, whose name is Sam Smith.  Then we
+would have:
+ 
+              ^DPT(1,0)="JONES,JOHN^M^2341225^"     
+                         .     
+                         .
+              ^DPT(7,0)="SMITH,SAM^M^2231109^"     
+              ^DPT(9,0)="JONES,JOHN^M^2500803^"     
+              ^DPT("B","JONES,JOHN",1)=""     
+              ^DPT("B","JONES,JOHN",9)=""     
+              ^DPT("B","SMITH,SAM",7)=""     
+ 
+Note that "all the data is in the subscripting", and the global nodes under
+^DPT("B") are simply null strings.  Actually, the system allows for these 
+strings to be non-null in the case where we are Cross-referencing a mnemonic 
+(alias) for the Name.  Multiple cross-references ("C", "D", etc.) are also 
+allowed.
+
+D. ATTRIBUTE DICTIONARY     
+ 
+The Attribute Dictionary describes the data fields which a file contains within
+the global ^DD (for "Data Dictionary").  Each Attribute Dictionary is stored
+descendant from a positive-valued first-level node of this global.  Each
+Attribute Dictionary, in itself, is also in the form of a File, and hence
+consists of Entries, Cross-references, Descriptor, and a reference to the
+"zeroth" Data Dictionary (^DD(0)) which is a dictionary of the Attributes of
+Attributes.  For the most part, FileMan "packs" data into subscripts using the
+"^" ("up-arrow") character as the "$PIECE" delimiter.  Thus, we will refer to a
+Data Element as being stored in such-and-such "^"-piece of a global node.  Each
+Entry in the Attribute Dictionary is a descriptor of one of the Data Fields
+pertaining to Entries in the main File.  The system always assigns the Internal
+Number ".01" to the Name Field, and lets the user assign numbers to the other
+Data Attributes as he sees fit.  In our example the patient file has three other
+elements; Sex, Birthdate, and Diagnosis; and that Diagnosis is multiple valued.
+Let us suppose that the Attribute Dictionary for this File is stored in ^DD(2).
+In this File, an Entry Name is always found as the first "^"-piece in subscript
+zero, so we would have:
+ 
+         ^DD(2,.01,0)="NAME^"     
+         ^DD(2,1,0)="SEX^"     
+         ^DD(2,2,0)="DOB^"     
+         ^DD(2,3,0)="DIAGNOSIS^"     
+ 
+The rest of the zeroth subscript for any Field consists of:
+ 
+"^"-piece #2: a string containing
+ 
+    
+      
+     "BC"       if the Data is true-false ("Boolean") "computed"
+     "C"        if the Data is "computed"
+     "Cm"       if the Data is multi-line "computed"
+     "D"        if the Data is date-valued
+     "DC"       if the Data is date-valued "computed"
+     "F"        if the Data is free-text
+     "I"        if the Data is "uneditable" (Utility Option 9)
+     "J"n       to specify a print length of "n" characters
+     "J"n","d"  to specify printing "n" characters with "d" decimals
+     "N"        if the Data is numeric-valued
+     "O"        if the field has an output transform
+     "P"n       if the Data is a "pointer" reference to File 'n'
+     "P"n"'"    if LAYGO to the pointed to file is not allowed
+     "P"n"*"    if the pointer field is defined to have a "screen"
+     "R"        if the Data is "required" (can't skip input)
+     "S"        if the Data is from a discrete "set"
+     "W"        if the Data is "Word-Processing"
+     "WL"       if the Data is "Word-Processing" which is normally
+          	printed in "line-mode"
+     "X"        if the syntax-check has been modified under the
+          	Utility Option
+      
+     
+     This "^"-piece begins with a numeric if the data is multiple-valued.
+ 
+"^"-piece 3:   either the global "pointer" reference if the data type
+              is "P", or the "set" of allowed "responses" and their 
+              meanings, if the data type is "S", or nothing.
+ 
+"^"-piece 4:   subscript location and "^"-piece, separated by a ";", or
+              subscript location and character-positions, also separated
+              by a ";" where "Em,n" designates character positions m thru
+              n, or subscript location, followed by ";", followed by zero,
+              to designate multiple-valued data.
+ 
+"^"-piece #5:  MUMPS code to check an input in the variable 'X'.  'X' is
+              killed by the code if input is invalid.  In the case of a
+              "computed" Field, the code creating the variable 'X' is
+              stored here.
+ 
+Subscript #0.1 (at the third level), if it exists, contains the full-length
+"Title".
+ 
+Subscript #1, if it exists, contains, at lower subscript levels, Executable 
+MUMPS code to create and kill cross-references based on the value of the Field 
+(in the variable 'X').
+ 
+Subscript #2, if it exists, contains the "output transform" --MUMPS code to
+display the Field value in a format differently from the way in which it is
+stored (See Chapter V.G).
+ 
+Subscript #3, if it exists, contains a prompting message to be displayed when 
+the user types "?".
+ 
+Subscript #4, if it exists, contains MUMPS code that will be executed in 
+addition to displaying the "canned" prompt when the user types "?".
+ 
+Subscript #5, if it exists, contains, at lower subscript levels, pointers to
+"Trigger" Cross-references to this Field.
+ 
+Subscript #8, if it exists, is the "Read Access" for the Field.
+ 
+Subscript #8.5, if it exists, is the "Delete Access" for the Field.
+ 
+Subscript #9, if it exists, is the "Write Access" for the Field.
+ 
+Subscripts #9.2 thru #9.9, if they exist, are the 'overflow' Xecutable MUMPS 
+code that may be part of the specification of a "Computed"-type field.
+ 
+Finally, a programmer can set the "DEL" subscript for the .01 (NAME) field to a
+string of Xecutable MUMPS code that will determine if the entry can be deleted.
+It must contain a MUMPS "IF" command to set the value of "$T".  If "$T" is set 
+to "1", the entry can not be deleted.  Normally, the ^DD format is:
+ 
+    ^DD(File #,.01,"DEL",field number,0)="executable MUMPS code"
+ 
+where field number is the field to be tested by the MUMPS code to determine if
+deletion is allowed.
+ 
+Thus, for our example:
+ 
+    ^DD(2,.01,0)="NAME^FR^^0;1^I X'?1A.AP1",".AP K X"
+    ^DD(2,.01,.1)="PATIENT'S NAME"
+    ^DD(2,.01,1,1,0)="2^B"
+    ^DD(2,.01,1,1,1)="S ^DPT("B",$E(X,1,30),DA)="""
+    ^DD(2,.01,1,1,2)="K ^DPT("B",$E(X,1,30),DA)"
+    ^DD(2,.01,3,1)="TYPE NAME IN THE FORMAT: LAST,FIRST"
+    ^DD(2,1,0)="SEX^RS^M:MALE;F:FEMALE^0;2^Q"
+    ^DD(2,2,0)="DOB^D^^0;3^S %DT="EX" D ^%DT S X=Y I X<1400000!(X>2770000) K X"
+    ^DD(2,2,.1)="DATE OF BIRTH"
+ 
+can be translated into the following words:     
+ 
+The first Field is NAME ("PATIENT'S NAME", in the long form).  It is a free-text
+Datum which must consist of at least 1 alpha, followed by other alpha and
+punctuation characters & containing a comma.  It is always required from the
+user, and is stored in subscript 0, "^"-piece 1, of each Patient's File.  If the
+user types a "?" when asked for the Name, he will see:
+ 
+              TYPE NAME IN THE FORMAT: LAST,FIRST     
+ 
+The Patient File is Cross-referenced by Name, so that every time a Name is
+changed, the corresponding subscript under ^DPT("B") is also changed.  'DA' will
+always be the Internal Number of the patient when the Cross-referencing code is
+executed.  If a second Cross-reference for 'Name' existed (for example, a
+"trigger"), it would be descendant from
+ 
+              ^DD(2,.01,1,2
+ 
+The second Field is SEX.  It is stored as either "M" or "F" in the 2nd "^"-piece
+position of subscript 0 of each Patient File.  The user is required to enter it,
+and can type "MALE" instead of "M", and "FEMALE" instead of "F".  He will see 
+the two choices displayed if he types a "?" when asked for Sex.
+ 
+The third Field is DOB (full title: "DATE OF BIRTH"), which, if it is entered 
+(it is not required), must be in the format of a date somewhere between 1840 and
+1977.  It is stored in the 3rd "^"-piece of subscript 0 of the File.
+ 
+A multiple-valued Field like "Diagnosis" (see Chapter I of the User's Manual) is
+described by a separate Data Dictionary.  FileMan creates this new Data
+Dictionary descendant from a non-integer subscript of ^DD.  In the case of the
+patient File described by ^DD(2), it would store "subsidiary" Data Dictionaries
+in ^DD(2.01), ^DD(2.02), etc.  The subsidiary Data Dictionary for the multiple-
+valued "diagnosis" Field could look like this:
+ 
+         ^DD(2.01,0)="DIAGNOSIS SUB-FIELD^NL^.01^1"     
+         ^DD(2.01,.01,0)="DIAGNOSIS^MF^^0;1^K:$L(X)>30!($L(X)<3) X"     
+         ^DD(2.01,.01,3)="ANSWER MUST BE BETWEEN 3 TO 30 CHARACTERS IN LENGTH"     
+ 
+The only new element here is the "M" in the second '^'-piece of ^DD(2.01,.01,0).
+This is the flag corresponding to the 'YES' answer to the question:
+ 
+    HAVING ENTERED OR EDITED ONE DIAGNOSIS, SHOULD USER BE ASKED ANOTHER?
+ 
+It says that the Diagnosis Field should be "multiply-asked", until the user hits
+<null> to the
+ 
+         DIAGNOSIS:     
+ 
+query on a patient.
+ 
+There will also be an Entry corresponding to Diagnosis in the "principal" 
+patient Data Dictionary:
+ 
+    ^DD(2,3,0)="DIAGNOSIS^2.01A^^DX;0"
+ 
+The "2.01" here points off to the subsidiary Data Dictionary of that number; it
+says that, to find the data descriptors of Diagnosis (and all Fields pertaining
+to Diagnosis, e.g., Age at Onset), we must look in ^DD(2.01).  The "A" tells us
+that everytime the user enters a new diagnosis, it will be Automatically added 
+to the file and he will not be asked
+ 
+         ARE YOU ADDING A NEW DIAGNOSIS?     
+ 
+The "DX;0" in the fourth '^'-piece tells us that the entire Diagnosis sub-File
+will be stored descendant from the "DX" subscript in each patient's record.
+ 
+ 
+VA FileMan  V.17 - Apr 1986                       Programmer's Manual  (4)
+
+
+
+
+                     IV.  PROGRAMMER ROUTINES
+ 
+ 
+Certain modules within FileMan are callable by other MUMPS routines.  The
+programmer of such routines must keep in mind the variable-naming conventions
+listed above.  If he has his own local variables that he wishes to be
+preserved by a call to any of the routines described here, he should be sure
+to give them multi-character names beginning with letters other than 'D'.
+ 
+ 
+A.  FILE LOOKUP PROGRAM -- "DIC"
+ 
+This routine searches a global file name specified by the variable 'DIC' and
+returns the variable 'Y' either as:
+ 
+         Y=-1    if the input is not found, or else
+         Y=N^S   where 'N' is the Internal Entry Number, and
+                 'S' is the full Entry Name.
+ 
+The variable 'DIC' must be defined prior to invoking the "DIC" routine.  The
+variable  'DIC' must be either the File number (integer or fractional), or
+else an explicit global reference in the form "^GLOBAL(" or "^GLOBAL(X,Y,".
+ 
+The routine "DIC" always creates the variable 'U', and leaves it defined as
+the single-character string "^" (up-arrow) upon return.  Except for the
+'DIC("W")' variable (see below), which is killed, the 'DIC' array is left
+unchanged by the "DIC" routine.
+ 
+The variable 'DIC(0)' must also be defined as a string of alphabetic
+characters according to the following:
+ 
+If the variable 'DIC(0)' contains the character "A", the program asks for
+input from the terminal and re-asks in case of erroneous input other than
+<null> or a string containing the up-arrow ("^").  This input 'X' is returned
+when "DIC" quits.  If, however, 'DIC(0)' does not contain the character "A",
+the input to the "DIC" program will be assumed to be in the local variable
+'X'.  If 'DIC("A")' is defined, it will be displayed prior to the reading of
+the 'X' input; otherwise the name of the File ($P(^GLOBAL(0),"^",1)) followed
+by a space, the 'Label' of the .01 field then a colon will be displayed.  If
+the File Name is the same as the 'Label' of the .01 field, then only the File
+Name will be displayed.  Also, if 'DIC(0)' contains "A" and 'DIC("B")' is
+defined and is non-null, the value of 'DIC("B")' will be prompted as the
+default answer, and, in this case, if the terminal user enters just "escape",
+the 'DIC("B")' default value will be used, and returned in 'X'.  If the
+numeric-valued variable 'DTIME' is defined, terminal input will "time out"
+after 'DTIME' seconds if the user hasn't finished responding; in case of such
+a termination, the "DIC" routine will return with 'Y' equal to "-1" and 'X'
+equal to "^" (as though the user had typed "^"), and with the variable 'DTOUT'
+defined equal to '1'.
+ 
+If 'DIC(0)' contains "E", the File Entry names that match the input will be
+echoed back to the terminal, and if there is more than one such name, the user
+will be asked to choose which Entry he wants.
+ 
+If 'DIC(0)' contains "Q", and if erroneous input other than <null> or up-arrow
+is entered, "??" will be displayed, and the bell rung.
+ 
+If 'DIC(0)' contains "X", for "exact match", the input value must be found
+exactly.  Otherwise, the routine will look for any Entries which begin with
+the input 'X'.  Unless "X-act match" is specified, lower-case input that fails
+in the lookup will automatically be converted to upper-case, for a second
+lookup attempt.
+ 
+If 'DIC(0)' contains "L", then "DIC" will allow the user to add a new Entry to
+the File at this point ("Learn-As-You-Go"), as long as at least one of four
+security-check conditions apply:
+   
+     
+    1. The File has no "LAYGO Access Code"
+    
+    2. The local variable 'DUZ(0)' is equal to "@"
+    
+    3. Some character in 'DUZ(0)' can be found in the file's "LAYGO Access Code"
+    
+    4. The variable 'DLAYGO' is defined equal to the File number.
+    
+ 
+The user's input must, of course, be in valid format for an Entry Name, and he
+must respond with "Y" to the question
+ 
+         ARE YOU ADDING A NEW ENTRY?
+ 
+If such a new entry is indeed made in the invoking of "DIC", the variable 'Y'
+will be returned to the calling program as:
+ 
+         N^S^1
+ 
+where 'N' is the Internal Entry Number and 'S' the Entry Name, and "1" is the
+literal character "1".
+ 
+Normally, "DIC" does its lookup using the "B"-node cross-reference of the File
+(see Chapter III.B., above).  The "B" cross-reference may include "MNEMONIC"
+cross-references to a field other than the .01 field, as indicated in Chapter
+VIII.B. of the User's Manual.  Suppose that "MAIDEN NAME" is, as in the
+example given there, a "MNEMONIC" cross-reference.  Then a patient whose
+MAIDEN NAME is "DAVIS" will be found by "DIC" in the "B" cross-reference if
+the user types "DAVIS".  However, if her "real" (married) name were
+"DAVIDSON", her married name only would be displayed.  This "cross-reference
+suppression" can be overridden by including a "C" in the "DIC(0)" string.
+ 
+If 'DIC(0)' contains "M", "DIC" will do a "multi-lookup" on all of the File's
+cross-reference indices, from "B" on to the end of the alphabet.  Thus, for
+example, if a given File is indexed both by Name and by Social Security
+Number, and the user inputs "123-45-6789", "DIC", failing to find this input
+as a "Name", will automatically go on to look it up as a Social Security
+Number.
+ 
+If 'DIC(0)' contains "N", the input is allowed to be a File Entry Number, even
+if the File in question isn't normally referenced by Number.  If 'DIC(0)' does
+not contain an "N", the user is still allowed to select by File Entry Number
+by preceding the number with the "`" (accent grave) character.
+ 
+If 'DIC(0)' contains "Z" and if the lookup is successful (i.e., the variable
+'Y' is returned as something other than "-1"), then the variable 'Y(0)' will
+also be returned.  It will be set equal to the entire "zeroeth node" of the
+Entry that has been found.  To use the example on Chapter III.B., if the
+programmer writes:
+ 
+         SET DIC="^DPT(",DIC(0)="QEZ",X="SMITH" DO ^DIC
+ 
+he will get back:
+ 
+         Y="7^SMITH,SAM"
+         Y(0)="SMITH,SAM^M^2231109"
+ 
+Also,the "Z" parameter forces the "naked reference" to be set at the level of
+this "zeroeth node", so the calling program can easily make reference to some
+other node at the same level.  (Not a recommended practice)
+ 
+A valuable feature of the "DIC" routine is that, if an entry is found, its
+number gets saved in the global "^DISV".  To be precise, "^DISV($I,DIC)" gets
+set equal to the entry number.  This allows the terminal user to do a
+subsequent lookup of the same entry at the same terminal simply by hitting the
+"space bar".  The cost of this feature, of course, is the time required to set
+the global.  If the programmer invoking "DIC" wishes to be spared this cost,
+he should simply include an "F" in 'DIC(0)', in which case the lookup will not
+set ^DISV($I,DIC).
+ 
+To summarize the 'DIC(0)' options, then:
+         
+           
+          A   =   ASK and (if erroneous) re-ask Entry
+          C   =   CROSS-REFERENCE SUPPRESSION is turned off
+          E   =   ECHO back information
+          F   =   FORGET the lookup value, as far as ^DISV is concerned
+          L   =   LEARNING a new Entry is allowed
+          M   =   MULTI-INDEX lookup allowed
+          N   =   NUMBER allowed
+          Q   =   QUESTION erroneous input (with '??')
+          X   =   Exact match required
+          Z   =   ZEROETH node returned in 'Y(0)'
+          
+ 
+There are a few other "lookup" features available to programmers using 'DIC':
+ 
+1.  If 'DIC("S")' is defined, it will be understood to be a string of
+executable code, which the "DIC" routine will execute to "screen" an Entry
+chosen.  'DIC("S")' must contain a MUMPS 'IF' command to set the value of $T.
+Those Entries for which the 'IF' sets $T=0 will not be displayed or
+selectable.  At the moment the 'DIC("S")' code is executed, the local variable
+'Y' is the Entry number of the Entry being "screened", and the MUMPS "naked
+indicator" is at the global level @DIC"Y,0)".  Therefore, to use the previous
+example again, if we only wanted to find a male patient whose name begins
+with "SMITH", we would have:
+ 
+S DIC="^DPT(",DIC(0)="QEZ",X="SMITH",DIC("S")="I $P(^(0),U,2)=""M""" D ^DIC
+ 
+2.  If 'DIC("W")' is defined as a MUMPS command string, it will be Xecuted
+when 'DIC' displays each of several Entries that match the user's input.  The
+condition of the variable 'Y' and of the naked indicator is as specified in
+the previous paragraph.  If 'DIC("W")' is defined, it will override the
+display of any identifiers of the file.
+ 
+3.  When calling "DIC" with "LAYGO" allowed, you can specify that a certain
+list of Fields will be asked in the case that the user enters a brand-new
+Entry.  This list is specified by setting the variable 'DIC("DR")' equal to a
+string that looks exactly like the 'DR' string of Fields that is specified
+when calling 'DIE' (see next Section).  Such a list of "forced identifiers"
+overrides any Identifiers that would normally be asked for new Entries in
+this File.
+ 
+4.  Note that, if 'DIC(0)' is null, no terminal output will be generated by
+the "DIC" routine.  Otherwise, when the input contains a "?", a prompting
+message (including any output specified by 'DIC("W")') will be displayed.
+ 
+5.  One last feature: normally, as mentioned, 'DIC' does its lookup using the
+"B" cross-reference of the File.  You can make it do a lookup only on
+cross-reference "C", for example, by setting the local variable 'D' equal to
+"C" and entering at 'IX^DIC'.
+ 
+ 
+B.  DATA EDIT PROGRAM -- "DIE"
+ 
+A programmer can call the "Data Entry and Editing" Function of FileMan to
+handle input of selected data elements for a given File Entry.  This is done
+by invoking the routine "DIE".  The program needs three local variables set as
+input parameters (in addition to 'DT' and 'DUZ' -- see Chapter II.D.):
+         
+           
+          DIE   The Global Name of the File in the form "^GLOBAL(" OR
+                ^GLOBAL (X,Y," or else the Number of the File
+           
+          DA    The Internal Entry Number of the File Entry to be Edited
+                ('DA(1)' may also be needed if editing is occurring at a
+                lower level of the File.)
+           
+          DR    A String Specifying which Data Fields will be asked, for the
+                given Entry.
+          
+ 
+The "DR" string consists of either:
+ 
+1.  A single number corresponding to the Internal Number of a Field of the
+File (Remember that the Internal Number of any File's Name Field is .01).
+ 
+or 2.  A Field number as above, followed by "//" (two slashes), followed by
+the default prompt which should be displayed to the user when that Field is
+asked.  For example, if there is a File Entry stored descendant from
+^FILE(777), and Field #27 for this File is "DATE OF ADMISSION", and the
+programmer wishes the user to see:
+ 
+    DATE OF ADMISSION: TODAY//
+ 
+then the calling program should say:
+ 
+    SET DR="27//TODAY",DIE="^FILE(",DA=777 DO ^DIE
+ 
+If the user just hits 'RETURN' when he sees the prompt, "DIE" will act as
+though he had typed in the word "TODAY".  Naturally, if a different 
+admission date were already on file for #777, it would be that date that
+would be displayed after the "//", rather than "TODAY".
+ 
+or 3.  A Field Number followed by "///" (three slashes), followed by a value
+which will be automatically inserted into the database.  In the above
+example, if we had
+ 
+         DR="27///TODAY"
+ 
+the terminal user would see no query, but the current date would automatically
+be "stuffed" into Field 27 of Entry 777, even if other data previously
+existed there.
+ 
+or 4.  A range of Field Numbers, in the form M:N, where M is the First and N
+the Last Number of the Inclusive Range.  All Fields whose Numbers lie within
+this range will be asked.
+ 
+or 5.  A "Place-holder" like "@1" (see below),
+ 
+or 6.  A line of MUMPS code (see below),
+ 
+or 7.  A sequence of any of the above 4 types, separated by semicolons.  If,
+say, Field Numbers .01, 1, 2, 4, 10, 30, and 101 exist for the File stored in
+^FILE, and the programmer wants to have Fields 4, .01, 10, 30, and 101 asked
+(in that order) for Entry Number 777, he simply writes:
+ 
+         SET DIE="^FILE(",DA=777,DR="4;.01;10:999" DO ^DIE
+ 
+and he returns with the appropriate subscripts of ^FILE(777) entered or
+edited.  Note that the 'DR' string contains the semicolon delimiter to specify
+specific field number and the colon to specify a range of fields.
+ 
+or finally 8.  If 'DR' is simply the name of an Input Template, preceded by
+"[" and followed by "]", then all the fields in that Template will be asked.
+ 
+Note that the Fields specified by 'DR' will be asked whether or not FileMan
+"Write Access" security protection has been assigned to the Fields.
+ 
+The programmer can include "branching logic" within 'DR'.  He does this by
+inserting an executable MUMPS statement in one of the "semicolon-pieces" of
+'DR'.  The MUMPS code will be executed when this piece of 'DR' is encountered
+by the "DIE" routine.  If the MUMPS code sets the variable 'Y', "DIE" will
+jump to the Field whose Label (or Number) matches 'Y'.  (The Field must be
+specified elsewhere within the 'DR' variable).  'Y' may look like a
+"place-holder", e.g., "@1".  If 'Y' is set to zero ("0") or to the null string
+(""), "DIE" will exit.  If 'Y' is KILLed, or never set, no branching will
+occur.  The MUMPS code can calculate 'Y' based on 'X', which will at that
+moment be equal to the internal value of the Field previously asked for (as
+specified by the previous "semicolon-piece" of 'DR').  Take the above example,
+and suppose that we don't want the user to be asked for Fields .01 or 10 if
+his answer to Field Number 4 was "YES".  We therefore write:
+ 
+         S DIE="^FILE(",DA=777,DR=1;4;I X=""YES"" S Y=30;.01;10;30;101"
+         DO ^DIE
+ 
+Suppose one of the fields to be edited is a multiple, and you want to edit
+only selected subfields in the multiple.  In the above specifications for the
+'DR' string, all the subfields of the multiple will be asked.  To do this,
+we set 'DR' in the usual manner and in addition we set a subscripted value of
+'DR' equal to the subfields we want to edit.  For example, if field #4 is a
+multiple and the subdictionary number for the multiple is 16001.02.  If we
+want the user to be prompted only for subfields ".01" and "7" then we:
+ 
+         SET DR=".01;4;6;8" 
+         SET DR(2,16001.02)=".01;7"
+ 
+where the first subscript ("2") means the 2nd level and the second subscript
+is the subdictionary number of the multiple field (#4).
+ 
+If there are more than 250 characters in a 'DR' string, the programmer can set
+continuation strings by defining the 'DR' array at the third level.  For
+example, the first continuation node of DR(2,16001.02) would be
+DR(2,16000.02,1), the second would be DR(2,16001.02,2) and so on.
+ 
+'DA', 'DIE', and 'DR' are left intact by "DIE", except that if the Entry is
+killed within "DIE" (which can happen if the user answers "@" when he is
+editing the Entry's name), the variable 'DA' is also killed.
+ 
+The programmer can determine, upon return from "DIE", whether the user exited
+the routine by typing an up-arrow.  If he did so, the subscripted variable 'Y'
+will be defined; if all questions were asked and answered in normal sequence,
+$D(Y) will be zero.
+ 
+The programmer can force the user to answer all questions, with no
+"up-arrowing" allowed.  He does this by setting the variable 'DIE("NO^")'
+equal to some value before invoking '^DIE'.  If 'DIE("NO^") is equal to the
+5-character string "OUTOK", then the user is allowed to enter a simple
+up-arrow ("^"), but not to use the up-arrow to branch to fields out of the
+normal sequence.
+ 
+ 
+C.  DATA PRINT -- "DIP"
+ 
+A programmer can invoke the "File Print" program, "DIP", at the entry point
+"EN1" to display a range of Entries in columnar (or template) format.
+ 
+Input variables must be defined as follows (in addition to 'DUZ' & 'DT'):
+ 
+L        Set L=0 or some string whose numeric value is 0, like "LIST DRUGS".
+         the string can appear to the terminal user in messages like:
+ 
+                   LIST DRUGS BY: NAME//
+ 
+DIC      The Global Name of the File in the usual format.
+ 
+FLDS     The various Fields to be printed, separated by commas, (e.g.,
+         FLDS="NAME,DOB,SEX;C20" or FLDS="[DIQ]") as a user would normally
+         have answered the "PRINT FIELD:" questions within the File Print
+         Option of 'DI'.
+ 
+BY       The name of the "SORT BY" field (or null).  Again, to force answers,
+         separate them with commas (e.g., BY="DIAGNOSIS,DATE OF ONSET").  If
+         one of the "comma-pieces" of the "BY" string is the character "@",
+         the terminal-user will be asked for that "SORT-BY" response.  Thus,
+         if you want to sort by DIAGNOSIS but allow the user to order the
+         Sort within DIAGNOSIS, set BY="DIAGNOSIS,@".
+ 
+FR       The "START WITH:" value of the "SORT BY" field (or null) this
+         variable is undefined, the terminal user will be asked the "START
+         WITH:" question.  Multiple answers can be separated with commas; if
+         you want the terminal user to be asked one of the multiples, use "?"
+         as a place holder for that multiple.  Thus, in the example just
+         above, if we set FR=",?" we will be sorting from the first
+         DIAGNOSIS, but the user will be asked START WITH DATE OF ONSET:
+ 
+TO       The "GO TO:" value of the "SORT BY" field (or null) If this variable
+         is undefined, the terminal user will be asked the "GO TO:" question.
+         Multiple answers can be separated with commas, as above.
+ 
+DHD      The Header desired for the output ("@" if no header desired)
+         Remember the "[TEMPLATE NAME]" syntax for using a Print Template as
+         a header.
+ 
+PG       Starting Page number.  If variable is undefined, "Page 1" will be
+         assumed.
+ 
+DIOEND   A string of MUMPS code which is executed after the printout has
+         finished but before returning to the calling program.
+ 
+Thus, the programmer can call "EN1^DIP" to "pre-answer" some or all of the
+Print Option information that the user normally would enter.  He should note
+that the "^%ZIS" routine will still be invoked by "^DIP" (actually, "^DIP3")
+to determine which device the output should go to.  If "%ZIS" chooses an 'SDP'
+or other such "linear" device, and if multiple copies are desired, the
+programmer can call for them by setting
+ 
+    "DCOPIES" = number (greater than one) of copies desired.
+ 
+All the input variables (except 'DUZ' and 'DT') are killed before "DIP"
+returns to the calling program.
+ 
+ 
+D.  DATA DISPLAY -- "DIQ"
+ 
+Similar to the "DIE" routine, a programmer can call the "File Inquiry"
+program, "DIQ", at the entry point "EN" to display a range of data elements in
+captioned format.  Two local variables must be defined as input parameters:
+ 
+    'DIC' = The Global Name of the File in the usual format
+    'DA'  = The Internal Entry Number of the File Entry to be printed.
+ 
+If, in addition to the above, the variable 'DR' is defined at input, it will
+be understood to name the global subscript or subscripts which are to be
+displayed by "DIQ".  If 'DR' contains a colon (:), the range of subscripts is
+understood to be specified by what precedes and follows the colon; otherwise,
+'DR' is understood to be the literal name of the subscript.  All data Fields
+stored within, and descendant from, the subscript(s) will be displayed, even
+those which normally have "Read Access" security protection.
+ 
+If, for example, Fields .01, 1, 2, and 4 are all stored in the zeroeth global
+node of a particular File's Entries, the programmer can call for the display
+of those Fields, for Entry Number 777, by writing:
+ 
+         SET DIC="^FILE(",DA=777,DR=0 DO EN^DIQ
+ 
+ 
+E.  WORD-PROCESSING FORMATTING AND OUTPUT -- "DIWP"
+ 
+A programmer can call the "DIWP" routine to format and (optionally) output any
+group of text lines.  Before calling "DIWP", the global ^UTILITY($J,"W")
+should be KILLed.  Then, for each text line, "^DIWP" is invoked with the
+following local variables defined:
+ 
+       'X' = the string of text to be added as input to the formatter
+ 
+       'DIWL' = the (integer-valued) left margin for the text
+ 
+       'DIWR' = the (integer-valued) right margin for the text
+ 
+       'DIWF' = a string of 'format control parameters' with effects as follows:
+ 
+If 'DIWF' contains "W", the formatted text will be "written" out to the
+current device, and will not be stored in ^UTILITY($J,"W").  The routine
+"^DIWW" must be invoked after the last 'X' string is input to "^DIWP", so that
+the final line of formatted text can be output.  If 'DIWF' does not contain
+"W", no terminal output will occur, but the formatted text will be accumulated
+in ^UTILITY($J,"W",DIWL).
+ 
+If 'DIWF' contains "C" followed by an integer, 'N', the text will be
+formatted in a "column width" of 'N', thus overriding the value of 'DIWR'.
+ 
+If 'DIWF' contains "D", the text will be formatted "double-spaced".
+ 
+If 'DIWF' contains "I" followed by an integer, 'N', the text will be
+"indented" 'N' columns in from the left margin ('DIWL').
+ 
+If 'DIWF' contains "N", each line will be printed as it appears in
+the text. (No-wrap)
+ 
+If 'DIWF' contains "R", the text will be formatted "right-justified".
+ 
+To summarize the parameters 'DIWF' may contain:
+ 
+    Cn   = text is formatted over a Column width of 'n'
+    D   = Double-space the output
+    In   = Indent 'n' columns from the left margin
+    N   = No wrap; print each line exactly as it appears in the text
+    R   = Right-justify the text over the right margin
+    W   = Write out the formatted text to the current device.
+ 
+The 'X' input strings may contain "|"-windows, as described in the User Manual
+(for example, "|SETTAB(9,23,44)|").  The expressions within the "windows" will
+be processed as long as they are not "context-dependent" (i.e., as long as
+they do not refer symbolically to database Field Names).  Thus, "AUG 14,1986" 
+will cause today's date to be inserted into the formatted text, but "|SSN|" 
+will be printed out as it stands, because it can not be interpreted in context.
+ 
+ 
+F.  FORM DOCUMENT PRINT -- "DIWF"
+ 
+The "DIWF" routine is designed to use the contents of a Word-Processing field
+as a "target document" into which data will be inserted at print time.  The
+data may come from another FileMan file or provided by the user interactively
+at the time the document is printed.  A File containing a Word-Processing type
+field is first selected, and then an Entry in that File.  The Word-Processing
+text in that Entry is then used as a "Form" with which to print output from
+any other File.
+ 
+The Word-Processing text used will typically include "windows" into which data
+from the target file automatically gets inserted by "DIWF".  The "window"
+delimiter is the vertical bar ("|").  Thus, if a Word-Processing document
+contains "|NAME|" somewhere within it, "DIWF" will try to pick the NAME field
+(if there is one) out of the file being printed.  Any non-multiple Field
+Label or Computed-Field expression can be used within a "|" window.  If
+ 
+    1)  an expression within the "|" window cannot be evaluated, and
+ 
+    2)  the output of "DIWF" is being sent to a different terminal than
+        the one used to call up the output,
+ 
+then the user will be asked to type in a value for the window, for each data
+entry printed.  Thus, the Word-Processing text used as a "target document"
+might include the window "|SALUTATION|", where SALUTATION is not a valid field
+name in the source file.  When "DIWF" encounters this window, and failing to
+find a "SALUTATION" field in the source file, it will ask the user to enter
+"SALUTATION" text which then immediately gets incorporated into the output in
+place of that "window".  Note that we are referring to two Files - the
+"document" file which contains the word-processing text and the "print from"
+file which "DIWF" will use to try to "fill-in" data for the windows.
+ 
+Invoking "DIWF" at the top (i.e. DO ^DIWF) will result is the following
+dialogue:
+    
+    Select Document File: FORM LETTER  (a File with a W-P type field)
+    Select DOCUMENT: APPOINTMENT REMINDER  (an entry in the FORM LETTER File)
+    Print from what FILE: PATIENT
+    WANT EACH ENTRY ON A SEPARATE PAGE? YES//
+    SORT BY: NAME// FOLLOWUP DATE=MAY 1, 1986
+    DEVICE:
+ 
+In this example, the Word-Processing text found in the APPOINTMENT REMINDER
+Entry of the FORM LETTER file is used to print a sheet of output for each
+Entry in the PATIENT File whose FOLLOWUP DATE equals May 1, 1986.
+ 
+If the "Document File" contains a Pointer field pointing to File #1, and if
+the document entry selected has a value for that Pointer, then the File
+pointed to will be automatically used to "print from" and the user will not be
+asked "Print from what FILE:".
+ 
+Note that the READ ACCESS is checked by DIWF for both files selected.
+ 
+A programmer can invoke "DIWF" at two other entry points to pre-answer some or
+all of the questions normally asked of the user.
+ 
+EN1       This entry point is used when the calling program knows which File
+         ("document file") contains the desired Word-Processing text to be
+         used as a "target document".  If "DIWF" is entered at "EN1", the
+         variable 'DIC' should be defined in its customary way -- that is, it
+         identifies a file either by its file number or its global name
+         "root".  (e.g. DIC=16001 or DIC="^DIZ(16001,").
+ 
+         The file identified must contain a Word-Processing field.  The user
+         will then be branched to "Select DOCUMENT: " in the dialogue
+         described above to select a particular entry in the document file.
+ 
+EN2       This entry point is used when the calling program knows both the
+         "document" File and the Entry within that file which contains the
+         desired Word-Processing text to be used as a "target document".  If
+         "DIWF" is entered at "EN2", the variable 'DIWF' must be defined as
+         naming the global "root" at which the desired text is stored.  Thus,
+         in our example, if "APPOINTMENT REMINDER" is the third document in
+         the FORM LETTER file (stored in "^DIZ(16001,") and that the word
+         processing field is stored in subscript "1", we can:
+ 
+                   SET DIWF="^DIZ(16001,3,1,"
+ 
+         "DIWF" will then automatically use this entry and the user will not
+         be asked to select the document file and which document in that
+         file.
+ 
+If the calling program wants to specify which file should be used to "print
+from" for generating output, the number of that file should appear in the
+variable 'DIWF(1)'.  Otherwise, the user will be asked the "Print from what
+FILE:" question.  After this point, "EN1^DIP" is invoked; the calling program
+can set the usual 'BY', 'FR', and 'TO' variables if it wants to control the
+SORT sequence of the data file.
+ 
+ 
+G.  FILE RE-INDEXING AND ENTRY DELETION -- "DIK"
+ 
+A programmer can call the routine "DIK" at several entry points to delete
+entries from a file or re-index the file.
+ 
+To delete an entry from a file set the variable 'DIK' to a global reference
+analogous to 'DIC' in the file lookup routine (^DIC) and the variable 'DA' to
+the entry number you wish to delete then call "^DIK".  This will delete the
+internal entry number 'DA' from the file specified by 'DIK'.  Thus, to delete
+SAM SMITH from the Patient file in the example in Chapter III.B., the
+programmer can write:
+ 
+    SET DIK="^DPT(",DA=7 DO ^DIK
+ 
+The variable 'DA(1)' will also be needed if deletion will occur at a lower
+level of the file.  In this case, 'DIK' must be set to the "root" of the
+global node at that level.  Returning to the rudimentary Patient file in
+Chapter III, we see that patient JOHN JONES has two diagnoses on file.  To
+delete the second diagnoses ("ANGINA") we would write:
+    
+    SET DA(1)=1,DA=2,DIK="^DPT(" DA(1) ",""DX""," DO ^DIK
+ 
+where 'DA' is the diagnosis entry number in the sub-file and DA(1) is the
+patient's internal entry in the Patient file.
+ 
+Recall that in Chapter III, Section D we mentioned that each attribute
+dictionary is also in the form of a file.  We can therefore use the routine
+"DIK" to delete a single-valued field from a file.  To do this, the variable
+'DIK' is set to the file's Data Dictionary global node, 'DA' is set to the
+number of the field to be deleted and 'DA(1)' is set to the File number.
+Thus, to delete the field "SEX" from our Patient file example, one could
+simply write:
+ 
+    SET DIK="^DD(2,",DA=1,DA(1)=2 DO ^DIK
+ 
+The routine "DIK" leaves the 'DA' array and 'DIK' defined.  One can therefore
+loop through the file to delete several entries (or fields) as in:
+ 
+    SET DIK="^DPT(" F DA=2,9,11 DO ^DIK
+ 
+This will delete entries 2, 9 and 11 from the patient file.
+ 
+Using the routine "DIK" to delete entries should be used with extreme caution.
+It does not check "Delete Access" for the file nor does it update any pointers
+to the deleted entries.  When used to delete fields from a file, the data is
+also not deleted.  However, it does execute all cross-references and triggers.
+ 
+Two other entry points to the routine "DIK" can be used to re-index a file,
+they are:
+ 
+IXALL^DIK     will crossreference all indices for all entries in the
+              file named by 'DIK'.  The variable 'DIK', as above, should be
+              set to the file global reference.
+ 
+IX1^DIK       will crossreference all indices of the file named by 'DIK'
+              but only for the entry named in the variable 'DA' which should
+              be set to the internal entry number of the entry you wish to
+              crossreference.  Only set logic will be executed.
+ 
+ 
+H.  DATE CONVERSION -- "%DT"
+ 
+%DT is used to validate date/time input and convert it to a conventional
+storage format: "YYYMMDD.HHMM", where
+ 
+    YYY is number of years since 1700 (hence always 3 digits)
+    MM is month number (00-12)
+    DD is day number (00-31)
+    HH is hour number (00-23)
+    MM is minute number (01-59).
+ 
+It is to be noted that this format allows for representation of "imprecise"
+dates like "JULY '78"  or  "1978"  (which would be equivalent to 2780700 &
+2780000 respectively), and that it is always returned as a canonic number
+(no trailing fractional zeroes).
+ 
+The input value to "%DT" (if any) is in the local variable 'X'.  The output is
+in 'Y' (which is returned as "-1" if the input is invalid).  A variable named
+%DT is used to direct the input and conversion of dates.
+ 
+CODE     VALUE
+ 
+ A       Ask for date input
+ E       Echo the answer
+ F       Future dates are assumed
+ N       Pure numeric input (e.g., "121177") is not allowed
+ P       Past dates are assumed
+ R       Require time input
+ T       Time input is allowed but not required
+ X       Exact date (with month and day) is required
+ 
+  Examples:
+ 
+S %DT="",X="T" D ^%DT S DT=Y ;sets DT equal to today's date
+ 
+S %DT="AEPT" D ^%DT G OUT:Y<0 ;asks for a date with optional time
+ 
+Imprecise dates (without a day or month) may be entered unless %DT contains
+"X".  Time input is allowed when %DT contains "T".  To require a time input,
+%DT must contain "R"; the parameter "T" only allows but does not require the
+response to include time.
+ 
+Including "P" in %DT is suggested for dates in the past such as date of birth
+or admission date.  This will properly convert a month/day entry with no year
+to the past year and will convert two-digit years that are greater than the
+current year (e.g., "JAN 1, 98") to years in the 1800's.
+ 
+Including "F" in %DT is suggested for future dates such as "appointment
+date/time", so that, for example, when the current date is February 20, 1986,
+"MAR 4" gets converted to March 4, 1987.
+ 
+%DT("A") can be set to a string that will replace the standard "DATE: " prompt
+when the user is asked for input.  This is like the use of DIC("A") for the
+^DIC routine.
+ 
+%DT("B") may be set as the default answer to the date prompt.  It is the
+programmer's responsibility to ensure that %DT("B") contains a valid
+Date/Time.  Allowable date input formats are explained in Chapter II of the
+FileMan User's Manual.
+ 
+If "%DT" reads a date/time response from the terminal ('%DT' contains "A"),
+and if the numeric-valued variable 'DTIME' is defined, terminal input will
+"time out" after 'DTIME' seconds if no response is made; in this case, 'Y'
+will be returned as "-1" and 'DTOUT' will be returned as "1".  All variables
+set before calling "%DT" are returned unchanged.
+ 
+An option input parameter, '%DT(0)', can be used with the "%DT" routine.  This
+variable prevents the input date value from being accepted if it is
+chronologically before, or after, a particular date.  Set '%DT(0)' equal to a
+FileMan-format date (e.g., %DT(0)=2690720) to allow input only of dates
+greater than or equal to that date.  Set it negative (e.g.,
+%DT(0)=-2831109.15) to allow only dates less than or equal to that
+date/time.  Set it to "NOW" to allow dates from the current (input) time
+forward.  Set it to "-NOW" to allow dates up to the current time.  Be sure to
+'KILL' this variable after returning from "%DT"!
+ 
+There is a simple way to do the reverse of what "%DT" does, i.e., to turn a
+date from "internal" YYYMMDD format to "external" format.  Simply set the
+variable 'Y' equal to the internal date, and execute ^DD("DD").  Thus, for
+example:
+ 
+         SET Y=2690720.1630 XECUTE ^DD("DD")
+ 
+will result in 'Y' being equal to "JUL 20,1969@16:30".
+ 
+ 
+I.  DATE COMPARE -- "%DTC"
+ 
+%DTC has a number of entry points.  The number of days between two dates can
+be found by setting 'X1' and 'X2' to "YYYMMDD"-type dates and then calling
+"%DTC".  The result is returned in 'X'; 'X1' and 'X2' are killed.  The result
+can be thought of as X1-X2; it can be negative.  '%Y' is returned as 1 when
+the dates both have month and day values, %Y=0 when either date is imprecise.
+ 
+C^%DTC takes a date in 'X1' and adds 'X2' days, returning a "YYYMMDD"-type
+date in 'X' and a $H format date in '%H'.
+ 
+H^%DTC converts a "YYYMMDD" date in 'X' to a $H format date (output in %H).
+'%Y' is returned with a value of -1 if 'X' was imprecise, otherwise '%Y' is a
+day-of-week numeric value 0 to 6 for Sunday to Saturday.
+ 
+DW^%DTC does what H^%DTC does, and then sets 'X' to a string day-of-week name.
+'X' will be null if the input date ('X') was imprecise.
+ 
+YMD^%DTC converts a $H format date (in %H) to a "YYYMMDD"-type date output in
+'X'.
+ 
+COMMA^%DTC can be called by any user program.  It formats a number (in 'X') to
+a string that will separate billions, millions, and thousands with commas.  If
+the parameter 'X2' exists, it can specify dollar sign and fractional digit
+results:
+ 
+    S X=12345.678 D COMMA^%DTC         ;result: X="  12,345.68 "
+    S X=9876.54,X2="0$" D COMMA^%DTC   ;result: X="     $9,877 "
+    S X=-3,X2="2$" D COMMA^%DTC        ;result: X="     ($3.00)"
+ 
+ 
+J.  MUMPS VALIDATION -- "DIM"
+ 
+FileMan includes a programmer-callable package to validate any line of MUMPS
+code that conforms to the 1984 Standard.  Invoke "DIM" with the line to be
+validated in the local variable 'X'.  "^DIM" will either kill 'X', or leave it
+unchanged.  If $DATA(X) is zero on return from "DIM", the line of code was
+invalid.  The converse is not always true; in other words, "^DIM" is not as
+smart as a real MUMPS interpreter and sometimes "validates" strings when it
+shouldn't.  This is really a "utility package", and uses only local variables
+that begin with the "%" character.
+ 
+Note:  "DIM" will not allow the killing of an unsubscripted global.
+ 
+VA FileMan  V.17 - Apr 1986                        Programmer's Manual  (5)
+
+
+
+
+              V.  ADVANCED FILE-DEFINITION FEATURES
+ 
+ 
+If FileMan routines are invoked with the 'FileMan Access Code' -- the local
+variable 'DUZ(0)' -- pre-set to the "@" character, the user will be understood
+to be a 'MUMPS'-proficient programmer, who therefore can control certain
+file-definition options which would otherwise be handled "invisibly" by the
+system:
+ 
+ 
+A.  STORING DATA IN A GLOBAL OTHER THAN '^DIZ'
+ 
+When setting up a brand-new File (Modify File Attributes Option), a
+programmer-user can tell the system whether he wishes:
+    
+      
+     1)  to store the new file in the "^DIZ" global array, descendant from the
+     File Number just assigned, or
+      
+     2)  to store the new file in a global array of his own choosing.
+      
+The dialogue looks like this:
+      
+               MODIFY WHAT FILE: TEST
+               ARE YOU ADDING 'TEST' AS A NEW FILE? Y  (YES)
+               FILE NUMBER: 24000//   (the number prompted will vary)
+               INTERNAL GLOBAL REFERENCE: ^DIZ(24000,//
+      
+At this point, the user either "escapes" to choose option (1), or types an 
+explicit global reference to choose option (2).  This reference is in the 
+format:
+      
+               ^GLOBAL( or
+               ^GLOBAL(subscript1,subscript2,...
+      
+The "^" preceding "GLOBAL(" need not be entered.  Extended global reference
+([UCI]) may be entered ahead of the Global name.  If the Global already exists 
+with some data in it, a warning message is displayed.
+      
+      
+B.  ASSIGNING WHERE FIELDS ARE STORED WITHIN A GLOBAL
+      
+When creating a new File Attribute, the programmer-user is asked for the
+global subscript and "^"-piece position to specify where in each File Entry
+the data element being defined will be stored.  If, for example, the user 
+were creating, for a particular File, an Attribute that he wanted stored 
+in the first "^"-piece position of the global subscript "DEMOG" for every 
+Entry, then he would enter:
+      
+              SUBSCRIPT: DEMOG
+              ^-PIECE POSITION: 1
+      
+To aid in the process, the system prompts the user with the "highest"
+Subscript previously used for the File, and then, when Subscript has been
+entered, it prompts the "^"-piece position one past the highest previously
+assigned for that subscript.  FileMan ensures that no more than 250 
+characters of data will be stored in any single Global node, and that no 
+two data Attributes are assigned to the same Subscript and "^"-piece 
+position.
+
+The user may occasionally wish to store fixed-length data by character
+position within the Global Subscript, rather than by "^"-piece position; he
+specifies that an Attribute is to be stored, for example, in character
+positions 1-3 of the indicated Subscript by answering:
+
+               ^-PIECE POSITION: E1,3
+      
+      
+C.  ASSIGNING 'SUB-DICTIONARY' NUMBERS
+
+At the very end of Chapter III, it was mentioned that data specifications 
+for multiple-valued sub-fields are stored in a "subsidiary Data 
+Dictionary".  Such a "sub-dictionary" is stored descendant from a non-integer-
+valued subscript of ^DD, for example ^DD(2.01).  Normally, when creating a new 
+multiple-valued Attribute (Option 4), the system automatically assigns this 
+fractional number.  The "@"-user, however, is allowed to pick the number he 
+wants, in response to:
+      
+         SUB-DICTIONARY NUMBER: 2.01//
+      
+      
+D.  MUMPS 'COMPUTED FIELDS'
+      
+The "@"-user who knows MUMPS can enter an executable line of code at any 
+point where one would normally be allowed to use 'Computed-Field' syntax.  The 
+code should create a variable 'X', which will be understood to be the value of 
+the computation.  Incidentally, whenever a "@"-user adds a Computed Field to a
+Data Dictionary under the Modify File Attributes Option, he will see a display
+of the MUMPS code that will set up the variable 'X' when this Field is used.
+      
+      
+E.  "SCREENED" POINTERS
+      
+The "@"-user who is MODIFYING a pointer-type Data Field (Option 4) will be
+asked:
+      
+         SHOULD POINTER ENTRIES BE SCREENED? NO//
+      
+If you answer "YES" to this question, you will be allowed to enter a line 
+of MUMPS code.  This code should set the variable 'DIC("S")', which in turn is
+used in the "DIC" lookup routine to "screen out" certain Entries in the
+'pointed-to' File.  Using this trick, for example, you could make sure that
+all providers being 'pointed to' from a Surgery File had an "S" code in some
+auxiliary Field:
+      
+     MUMPS CODE THAT WILL SET 'DIC("S")': SET DIC("S")="I $P(^(0),U,5)[""S"""
+      
+F.  "INPUT TRANSFORM"
+      
+This sub-option of the Utilities Option allows the "@"-user to tinker with the
+MUMPS code that checks incoming data for any specified Field.  What you see
+when you select the Field is a MUMPS statement that "validates" the variable
+'X', and kills it if it is found to be invalid.  As a programmer, you can
+re-write this line of code to your own individual requirements.  The code can
+"transform" 'X' if you wish; that is you can take 'X' and re-set it to the
+value you want filed.  An example would be a Name "transform" that deletes an
+extraneous space character following a comma:
+
+          INPUT TRANSFORM: K:$L(X)>30!($L(X)<3) X    Replace K
+               With S:X[", " X=$P(X,", ",1) "," $P(X,", ",2) K
+               Replace <return>
+               S:X[", " X=$P(X,", ",1) "," $P(X,", ",2) K:$L(X)>30!($L(X)<3) X
+      
+Once an "Input Transform" has been created for a Field, the syntax-checking
+that the Field does can no longer be modified using Option 4.  (A Data
+Dictionary listing will show "XXXX" for such a Field.)
+
+It should be noted that, for a Computed Field, the "Input Transform" is simply
+the MUMPS code that gets executed whenever the Field is computed.  Hence, any
+Computed Field calculation can be edited by a programmer using this
+sub-option.
+      
+      
+G.  "OUTPUT TRANSFORM"
+      
+Analogously with the above, the "@"-user can write a MUMPS Output Transform to
+convert internal data values to a different external form.  Here, the variable
+is 'Y', not 'X'.  To reverse the above example, suppose we wanted always to
+display the Name Field with a space character following the comma, even
+though the space was not stored.  We would do something like this:
+
+               OUTPUT TRANSFORM: S Y=$P(Y,",",1) ", " $P(Y,",",2,9)
+      
+Incidentally, if your MUMPS Operating System supports "terminal break", a
+"@"-user is allowed to "break" execution at any point, whereas a normal user
+can only "break" during output routines.
+ 
+VA FileMan  V.17 - Apr 1986                         Programmer's Manual  (6)
+
+
+     
+
+                 VI.  OTHER PROGRAMMER UTILITIES
+     
+      
+      
+A.  CREATING FUNCTIONS
+      
+As mentioned in the User Manual, the programmer-user of FileMan can create his
+own Computed-Expression "Functions".  In some ways, a Function can be thought
+of as an Output Transform (see previous page) that can work on any Field.  For
+example, you may have a preference for seeing many dates displayed as, e.g.,
+"20-7-69", rather than the "JUL 20,1969" that FileMan typically produces.
+Since this date is internally stored in the form "2690720" (see Chapter
+II.C.), you, the MUMPS programmer, know that it would be easy to write a line
+of code that took the variable 'X', and transformed it into
+
+         +$E(X,6,7) "-" +$E(X,4,5) "-" $E(X,2,3)
+      
+This is exactly what you are allowed to do when you go into the "Function"
+File under Enter/Edit Option (Option #1).
+
+To continue the above example, we show how one could create a "DASHDATE"
+Function which could then be used by all users to display Date-valued Fields
+and Expressions in the "DAY-MONTH-YEAR" format:
+      
+         Select OPTION: ENTER AND EDIT FILES
+         INPUT TO WHAT FILE: FUNCTION
+         EDIT WHICH ATTRIBUTE: ALL//
+      
+         Select COMPUTED-FIELD FUNCTION: DASHDATE
+            YOU ADDING 'DASHDATE' AS A NEW COMPUTED-FIELD FUNCTION? Y  (YES)
+         MUMPS CODE: S X=+$E(X,6,7) "-" +$E(X,4,5) "-" $E(X,2,3)
+         EXPLANATION: PRINTS DATE IN "DD-MM-YY" FORMAT
+         DATE-VALUED: NO
+         NUMBER OF ARGUMENTS: 1
+      
+Notice that the crux of the matter here is the "MUMPS CODE", which is written
+to transform the variable 'X' (the argument of the Function) into a different
+'X'.  If two arguments were required for the Function, the first would be
+found in the variable 'X1' and the second in 'X'.  Note, too, that although
+the new Function being created here, takes a Date-valued argument, it is not
+itself considered to be Date-valued (since it doesn't produce values that look
+like the standard FileMan internal representation of a date).
+
+Note that a "function" can be defined as taking no arguments.  This is
+analogous to MUMPS Special Variables like '$I' and '$H'.  For example, one
+could define a function like "BELL":
+
+         Select COMPUTED-FIELD FUNCTION: BELL
+            ARE YOU ADDING A NEW COMPUTED-FIELD FUNCTION? Y (YES)
+         MUMPS CODE: SET X=$C(7)
+         EXPLANATION: CAUSES A 'BEEP' TO OCCUR ON OUTPUT
+         DATE-VALUED: NO
+         NUMBER OF ARGUMENTS: 0
+      
+Users could then embed "beeps" in output Templates by entering:
+      
+     FIRST PRINT FIELD: BELL      (note: no parentheses)
+      
+One can delete a Function that one has created, in the usual way (i.e., by
+deleting the 'NAME' of the Function).  Such deletion doesn't harm any
+Computed-Fields that already have been created using the Function.
+      
+      
+B.  CODE GENERATION -- INPUT ROUTINES
+      
+If your MUMPS system has a way of "saving" routines, you can tell FileMan to
+write a "hard-coded" MUMPS routine that will do just what a particular Input
+Template tells the Enter/Edit Option to do.  The sole purpose of "DIEZ" is to
+enhance system performance by reducing the amount of data-dictionary lookup
+that accompanies FileMan inputting.  The routines created by "DIEZ" should run
+anywhere from 20%-80% more efficiently than "DIE" does for the same input.
+
+Call the "DIEZ" routine, and specify the maximum number of characters you want
+in your routines, the name of the Input Template you are using, and the name
+of the MUMPS routine you want to create.  If more code is compiled than will
+fit into a single routine, "overflow" code will be incorporated in routines
+with the same name, followed by '1', '2', etc.  Thus routine 'DGT' may call
+'DGT1', 'DGT2', etc.
+      
+Once "DIEZ" has created "hard code" routine for a particular Input Template,
+FileMan will automatically use that routine in the Enter/Edit Option, whenever
+the Template is specified for input.  However, it will cease using the routine
+when any of its Field definitions have been altered by the Modify File
+Attributes or Utility Option.  If a user edits and re-files the Template under
+the Enter/Edit Option, the "hard-code" routine(s) will be re-compiled
+immediately.
+      
+Note that the File of Input Templates (#.402) contains a Computed Field called
+"UNCOMPILED".  Templates for which this Boolean-valued Field evaluates "TRUE"
+are those which formerly existed in a compiled version, but which are
+currently not using their compiled routine names.  Sorting File #.402 by
+this field therefore allows one to see quickly which Templates might be in
+need of re-compilation, owing to changes in definition of their components.
+
+A "DIEZ"-compiled MUMPS routine may be called by any program that passes it
+the 'DA', 'DT', and 'DUZ' variables that "DIE" customarily uses.  Thus, if an
+Input Template called "PATIENT DATA" exists for File #2, and if "DIEZ" is used
+to "compile" it into the MUMPS routine "PTDATA", the following two lines of
+code are essentially equivalent:
+      
+     SET DA=987,DR="[PATIENT DATA]",DIE=2 DO ^DIE
+     
+     SET DA=987 DO ^PTDATA
+      
+Each invokes the Template for patient #987.
+      
+      
+C.  CODE GENERATION -- OUTPUT ROUTINES
+      
+Print Templates can be "compiled" into MUMPS routines analogously to Input
+Templates.  Call the "DIPZ" routine, and specify the maximum routine size, the
+name of the Print Template to be used, the name of the MUMPS routine to be
+created, and the Margin Width to be used for output (typically 80 or 132). 
+Again, if you specify the routine name "XXX", and more code is generated that
+can fit into that one routine 'overflow' routines, "XXX1" etc. will be
+created.
+
+Once "DIPZ" has been used to create a hard-coded output routine, that routine
+will be automatically invoked by FileMan within the Print and Search Options
+(and when called at EN1^DIP) whenever the corresponding Output Template is
+used.  The exception is that if an output Margin Width is specified that is
+smaller than the "compiled" margin, the compiled routine will not be used.
+Another minor exception: if the Template is used with "ranked" sorting, the
+compiled version is not used.  As with compiled Input Templates, as soon as
+data dictionary definitions of fields used in the Print Template are changed,
+the compiled version is no longer used.  If a user edits the Print Template,
+it is recompiled into hard code immediately.  Note the "UNCOMPILED" field in
+the File of Print Templates (#.4); its usefulness is analogous to the similar
+field described for Input Templates, above.
+
+Again, the purpose of this "DIPZ" code generation is simply to improve overall
+system throughput.
+
+A "DIPZ"-compiled MUMPS routine may be called by any program that passes to it
+the 'DT', 'DUZ', 'IOSL' (screen length), 'U' ("^"), and 'D0' variables, where
+'D0' is the Entry number to be displayed.  Additionally, the variable 'DXS'
+must be killed before calling the routine and after returning from it.  The
+compiled routine writes out its report for that single entry.  The exception
+is that routines compiled from Templates that include statistical totals
+cannot be called in this way.
+
+
+D.  CREATING ROUTINE "PACKAGES" FOR EXPORT
+      
+If you run FileMan on a system that includes non-Standard MUMPS commands to
+build routines ("ZSAVE" or equivalent), you can use the "DIFROM" routine to
+build a package of "initializer" routines that store data and data
+dictionaries from a set of Files, and can then be run at another MUMPS site to
+re-build these Files.  Another use for such routines is as a simple
+archiving facility: one copies off a File and its contents into routines,
+saves the routines on magtape or some other off-line medium, and then deletes
+the Files from active use.
+
+The "DIFROM" routine first asks you to enter a "two to four-letter package
+name" (for example, "AA" or "DPT"), so that it will know how to name the
+routines it creates.  (If you enter "AA", it will build routines whose names
+begin with the letters "AAINI".) "DIFROM" then asks you, one by one, to
+specify File names (or numbers), and for each File you specify, it will
+further ask whether you wish to "transfer Entries as well as data dictionary".
+
+Once you have finished listing the Files in your "package", "DIFROM" begins
+writing out the routines, making sure to copy, along with data definitions,
+any Templates you have set up for the specified Files.  As the routines are
+created, warnings are displayed if any non-graphic characters are encountered.
+Unless you answer "YES" to the query:
+
+         WANT SECURITY CODES SENT ALONG? NO//
+      
+If the user accepts the default, "DIFROM" removes all Access Codes from Files,
+Fields, and Templates in the copies it makes; so that the recipient of the
+package need not follow the same conventions of password security as the
+sender.
+      
+The size of the MUMPS routines that DIFROM creates will always be less than
+2000 characters, unless the user answers the query
+
+     MAXIMUM ROUTINE SIZE (BYTES): 2000//
+      
+with a number greater than 2000.  For portability to all ANSI Standard MUMPS
+systems, the 2000-character routine size limit should be maintained.
+      
+The recipient of the routines ("AAINIT", "AAINI001", etc., in the above
+example) simply loads them and runs "AAINIT".  "AAINIT" (or whatever its name)
+will initialize FileMan if necessary ("DINIT"), and will warn the recipient of
+any gross inconsistencies between the Files it describes and whatever Files
+may exist in the new environment.  If the "INIT" routines are bringing in new
+data to data Files which the recipient already has defined, he will be asked:
+
+     SHALL I ADD MY DATA TO YOURS?
+      
+If he answers "NO", no data for that File will be changed.  If he answers
+"YES", the transferred data will be added to that File, without destroying any
+data he already has.
+      
+As mentioned, DIFROM will transfer any Print, Input, or Sort Templates that
+pertain to any of the files being transferred.  The recipient may already be
+using versions of those Templates, and he is asked whether or not he wants the
+'new' versions to override the old ones.  As explained in Sections B and C
+above, some Print and Input Templates can exist in a "compiled" form, i.e.,
+they correspond to MUMPS routines that have been generated by the "DIEZ" or
+"DIPZ" routine.  When DIFROM transfers such templates, it 'remembers' that
+they should be compiled, and when it is through loading everything else, it in
+fact attempts to re-compile such templates for the recipient.  It does this if
+it knows that the recipient's MUMPS Operating System supports a "ZSAVE"
+functionality.  It uses that systems's 'preferred routine size'.  The
+dangerous aspect of this 're-compilation' is that the recipient could possibly
+have different code stored in the routines whose names the compiled
+Templates use.  For this reason, it is important that any sender of "DIFROM"
+routines warn his recipient of the routine names used by any incoming
+Templates.
+
+ 
+
+
