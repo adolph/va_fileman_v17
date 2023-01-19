@@ -1,0 +1,1130 @@
+<!-- Source: https://mumps.sourceforge.net/docs.html -->
+<HTML><HEAD><TITLE>MUMPS Documentation</TITLE></HEAD>
+<BODY>
+<CENTER><H1>MUMPS Documentation</H1></CENTER>
+<PRE>
+   Copyright (c) 1999, 2000, 2001, 2002, 2003
+        Raymond Douglas Newman.  All rights reserved.
+  
+   Redistribution and use in source and binary forms, with or without
+   modification, are permitted provided that the following conditions
+   are met:
+  
+   1. Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+   2. Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+   3. Neither the name of Raymond Douglas Newman nor the names of the
+      contributors may be used to endorse or promote products derived from
+      this software without specific prior written permission.
+  
+   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER AND CONTRIBUTORS "AS IS"
+   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+   ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+   LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+   CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+   SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+   INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+   CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+   THE POSSIBILITY OF SUCH DAMAGE.
+</PRE>
+<BLOCKQUOTE><BLOCKQUOTE><BLOCKQUOTE>
+<H2>Contents</H2>
+<BR><A HREF="#INTRODUCTION">Introduction</A>
+<BR><A HREF="#COMMANDS">MUMPS Commands</A>
+<BR><A HREF="#FUNCTIONS">MUMPS Functions</A>
+<BR><A HREF="#VARIABLES">MUMPS Variables</A>
+<BR><A HREF="#OPERATORS">MUMPS Operators</A>
+<BR><A HREF="#PATTERN">Pattern Match</A>
+<BR><A HREF="#INDIRECTION">Indirection</A>
+<BR><A HREF="#ROUTINE">Routine Format</A>
+<BR><A HREF="#SSV">Structured System Variables</A>
+</BLOCKQUOTE></BLOCKQUOTE></BLOCKQUOTE>
+<BR><BR>
+<H2><A NAME="INTRODUCTION">Introduction</A></H2>
+<H4>ANSI/MDC X11.1-1995</H4>
+The following discusses all language elements implemented in MUMPS V1 and
+the relation to the standard ANSI/MDC X11.1-1995.
+<H4>MUMPS Windowing API</H4>
+The MUMPS Windowing Application Programmer's Interface has not been
+implemented and hence any elements relating specifically to that interface
+have not been implemented.
+<H4>Open MUMPS Interconnect</H4>
+The Open MUMPS Interconnect Communication Protocol has not been implemented.
+<H4>Transaction Processing</H4>
+Transaction processing has not been implemented and hence any elements
+relating specifically to that feature (such as the commands TCOMMIT, TRESTART,
+TROLLBACK and TSTART) have not been implemented.
+<H4>Mnemonic Name Space</H4>
+SSVNs ^$CHARACTER and ^$DEVICE have not been implemented.
+<H4>Implementation Specific Syntax</H4>
+No Z commands, $Z functions or $Z variables have been implemented.
+<H4>External Calls</H4>
+User written external calls (Xcalls) are not currently supported, however,
+several external calls have been provided - see the MUMPS Documentation.
+<H4>Privilege</H4>
+The use of the term 'suitably privileged' in this document means either that
+the command is in a library (%) routine or the user is privileged.  In the unix
+case privileged means 'able to su to root' - for FreeBSD member of group wheel
+or the user who started the current environemnt.
+<BR>With the current version, however, any user may edit or create a library
+routine.
+<H4>UCIs and Volume Sets</H4>
+This implementation allows for sixty-three (63) volume sets each containing
+sixty-three (63) ucis (User Class Identifiers).  The current version does not
+implement additional volume sets and is therefore limited to one volume.
+<H4>VIEW and $VIEW</H4>
+One of the design aims of this implementation is the elimination of the VIEW
+command and the $VIEW function for memory examination and modification.
+VIEW and $VIEW are implemented purely for use on files and the database.
+<BR>
+Note: VIEW and $VIEW are currently implemented only for the database.
+<H4>Exponentiation</H4>
+The 'E' form of numbers is not supported by default.
+Specifically: +"2E3" = 2 not 2000.  From version 1.09, this "feature"
+may be turned on with SET ^$SYSTEM("EOK")=1.
+<BR><BR>
+<H2><A NAME="COMMANDS">MUMPS Commands</A></H2>
+<A HREF="#BREAK">BREAK</A>,
+<A HREF="#CLOSE">CLOSE</A>,
+<A HREF="#DO">DO</A>,
+<A HREF="#ELSE">ELSE</A>,
+<A HREF="#FOR">FOR</A>,
+<A HREF="#GOTO">GOTO</A>,
+<A HREF="#HALT">HALT</A>,
+<A HREF="#HANG">HANG</A>,
+<A HREF="#IF">IF</A>,
+<A HREF="#JOB">JOB</A>,
+<A HREF="#KILL">KILL</A>,
+<A HREF="#LOCK">LOCK</A>,
+<A HREF="#MERGE">MERGE</A>,
+<A HREF="#NEW">NEW</A>,
+<A HREF="#OPEN">OPEN</A>,
+<A HREF="#QUIT">QUIT</A>,
+<A HREF="#READ">READ</A>,
+<A HREF="#SET">SET</A>,
+<A HREF="#USE">USE</A>,
+<A HREF="#VIEW">VIEW</A>,
+<A HREF="#WRITE">WRITE</A>,
+<A HREF="#XECUTE">XECUTE</A>.
+
+<PRE>
+Cmnd:   ; (comment)
+Cond:   Not permitted
+Args:   None
+Use:    Everything to the end of the current line (including ;) is ignored
+        When the ; is in the leftmost column, the entire line is ignored
+        and hence does not effect the level (number of dots).
+Std:    Complies except, in this implementation, ; is permitted on the left
+        margin.  This is not permitted by the standard.
+Eg:     ;This is a comment
+<A NAME="BREAK"></A>
+Cmnd:   B[REAK]
+Cond:   Valid
+Args:   Break specifier
+        Argument indirection is not permitted.
+Use:    Suspends execution until receipt of a signal.
+        The signal is QUIT as BREAK effectively does an XECUTE or DO.
+        The break specifier may be one of the following:
+        B "breakref:code"       eg. "+13^FRED:D A^%DEBUG"       ;Set breakpoint
+        B "breakref:"           eg. "+13^FRED:"                 ;Set simple bp
+        B "breakref"            eg. "+13^FRED"                  ;Clr breakpoint
+        B                       eg.                             ;Break here
+        B ""                    eg. ""                          ;Clr all bp
+        Breakpoint processing is terminated with a QUIT.  The QUIT may be
+        followed by an integer to execute that many commands before breaking
+        again.  breakref is: [+line]^ROU
+        Notes:  code must be less than 255 bytes.
+                current breakpoints may be displayed using $O($BP(rou,lin))
+Std:    Standard does not specify arguments or signal.
+Eg:     B  ;Break here and make debug active
+        B "" ;Turn off debug
+<A NAME="CLOSE"></A>
+Cmnd:   C[LOSE]
+Cond:   Valid
+Args:   list of channel numbers
+Use:    Relinquishes ownership of the specified channel.  If the channel
+        is not currently open, the command is ignored.
+        If the channel is current (ie. $IO=channel) then $IO is set to 0.
+        Note: Closing channel 0 is ignored.
+Std:    The standard allows for device parameters to be specified.
+        This has not been implemented in this version.
+Eg:     C 1,2 ;Close output device and file
+<A NAME="DO"></A>
+Cmnd:   D[O]
+Cond:   Valid - also valid on each argument
+Args:   Zero or more entryref[(argumentlist)][postcondition]
+        entryref is of the form TAG[^ROU] or ^ROU.
+Use:    An argumentless DO initiates execution of an inner block of lines.
+        DO with arguments is a generalized call to a subroutine specified
+        by entryref.  The line specified by entryref must have a level
+        of one (ie. doesen't commence with a dot).  If the line specified
+        by entryref doesn't have a level of one, an error M14 is thrown.
+        The argumentless form of DO also does a NEW $TEST.
+Std:    The standard allows for an entryref of the form TAG+OFFSET.
+        This has not been implemented as it is considered to be a security
+        problem.
+Eg:     D  ;Do the following block of code
+        D TAG,EXT^ROU,TAG2(ARG1) ;Various subroutines
+<A NAME="ELSE"></A>
+Cmnd:   E[LSE]
+Cond:   Not permitted
+Args:   None
+Use:    If the value of $TEST is 1 the remainder of the line is not executed.
+Std:    Complies exactly
+Eg:     E  W "The last IF was false",! ;Check $TEST
+<A NAME="FOR"></A>
+Cmnd:   F[OR]
+Cond:   Not permitted
+Args:   Space or localvariable = one or more forparameter
+        forparameter is of the form start[:increment[:end]]
+        Argument indirection is not permitted.
+Use:    The scope of the FOR command begins with the next command on the
+        current line and extends to the end of the current line.
+        Any FOR loop may be terminated by the execution of a QUIT or
+        GOTO within the scope of the FOR.
+        Execution of a QUIT terminates the innermost FOR whose scope contains
+        the QUIT.  Execution of a GOTO terminates all FOR commands in the line
+        containing the GOTO.
+        The test is made before the scope is executed - for example
+        FOR I=10:1:9 DO SOMETHING ;This will do nothing
+Std:    Complies exactly
+Eg:     S OK=0 F  D  Q:OK  ;Execute following block until OK is true
+        FOR I=1:1:3,5,7:1:9 W I ;Write out 1235789
+        F I=1:1 F J=1:1 D SUB GOTO DONE:OK ;Process all I and J until OK true
+<A NAME="GOTO"></A>
+Cmnd:   G[OTO]
+Cond:   Valid - also valid on each argument
+Args:   One or more entryref[postcondition]
+        entryref is of the form TAG[^ROU] or ^ROU.
+Use:    GOTO is a generalized transfer of control.  The line specified by
+        entryref must have a level of one (ie. doesen't commence with a dot),
+        except where the line specified has the same level as the line
+        containing the GOTO and both lines are in the same routine and
+        there are no lines between the two lines of a lower (numerically
+        less) level.  Otherwise an error occurs with $ECODE = M45.
+Std:    The standard allows for an entryref of the form TAG+OFFSET.
+        This has not been implemented as it is considered to be a security
+        problem.
+Eg:     GOTO DONE:OK,FAIL ;Dispatch on OK flag
+<A NAME="HALT"></A>
+Cmnd:   H[ALT]
+Cond:   Valid
+Args:   None
+Use:    Execution of the process is terminated.
+Std:    Complies exactly
+Eg:     H  ;All done
+<A NAME="HANG"></A>
+Cmnd:   H[ANG]
+Cond:   Valid
+Args:   numeric expression
+Use:    If the numeric expression is greater than zero, execution is
+        suspended for numeric expression seconds else the current time
+        slice is surrendered.
+Std:    Complies exactly
+Eg:     H 30 ;Wait for 30 seconds
+        H 0 ;Give up the current timeslice (non-standard)
+<A NAME="IF"></A>
+Cmnd:   I[F]
+Cond:   Not permitted
+Args:   zero or more truth valued expressions
+Use:    Each tve is evaluated in order.  If true, $TEST is set to 1
+        and execution continues.  If false $TEST is set to 0 and
+        execution of the current line terminates.
+        The argumentless form is equivalent to IF $TEST ...
+Std:    Complies exactly
+Eg:     IF A=B,C=D GOTO TEST ;Dispatch when A=B and C=D
+<A NAME="JOB"></A>
+Cmnd:   J[OB]
+Cond:   Valid
+Args:   list of entryref[(argumentlist)][::timeout]
+        entryref is of the form [TAG]^ROU.
+Use:    The JOB command attempts to initiate another MUMPS process.
+        If the argumentlist is present, it may not contain call by
+        reference ($ECODE = M40) and must not be longer than the
+        argument list at entryref.
+        If timeout is present, the condition reported by $TEST is the
+        success of initiating the process.  If no timeout is present,
+        $TEST is unchanged and the current process is suspended until
+        the other process can be successfully initiated.
+        Note: The JOB command always "succeeds" and, if a timeout is present,
+        $TEST is always set to 1.
+Std:    Complies exactly
+Eg:     JOB INT^ROUTINE("PARAM1") ;Start background job
+<A NAME="KILL"></A>
+Cmnd:   K[ILL]
+Cond:   Valid
+Args:   space or variable list or (local variable list)
+Use:    With no arguments, make all current local variables undefined.
+        With variable list, make all listed variables and their descendants
+        undefined.
+        With bracketed local variable list, make all local variables
+        (unsubscripted) except those listed and their descendants undefined.
+Std:    Complies exactly
+Eg:     KILL (A,B) ;Remove all local variables except A and B
+        K ^DATABASE(1) ;Remove ^DATABASE(1) and its descendants
+<A NAME="LOCK"></A>
+Cmnd:   L[OCK]
+Cond:   Valid
+Args:   zero or more nrefs or (one or more nrefs) or plus (+) or minus (-)
+        followed by one nref or (one or more nrefs).
+        nref is a valid MUMPS local or global variable name
+        Other than zero nrefs may be followed by :timeout
+Use:    LOCK provides a generalized interlock facility.  Execution of a LOCK
+        is not affected by, nor does it directly affect, the state or value
+        of any local or global variable, or the state of the naked indicator.
+        Its use is not required to access globals, nor does its use inhibit
+        other processes from accessing globals.  It is an interlocking
+        mechanism whose use depends on programmers establishing and following
+        conventions.
+Std:    Complies exactly
+Eg:     L +^DATABASE(1) ;Lock required part of the database
+<A NAME="MERGE"></A>
+Cmnd:   M[ERGE]
+Cond:   Valid
+Args:   list of variable1 = variable2
+Use:    Copy variable2 and its descendants into variable1.  If variable1
+        is a descendant of variable2 or variable2 is a descendant of variable1
+        then an error (M19) occurs.
+Std:    Complies exactly
+Eg:     M ^DATABASE(1)=LOCAL ;Save our data in the database
+<A NAME="NEW"></A>
+Cmnd:   N[EW]
+Cond:   Valid
+Args:   space or local variable list or (local variable list)
+Use:    With no arguments, make all current local variables undefined.
+        With variable list, make all listed variables and their descendants
+        undefined.
+        With bracketed local variable list, make all local variables except
+        those listed and their descendants undefined.
+        Variables may not be subscripted variables (ie. only the top level
+        may be specified), however, NEW A also NEWs all descendants of A.
+        At the next QUIT at this level, all variables referenced by this
+        command are restored to their previous state.
+        Additionally, the following system variables may be NEWed:
+        $ET[RAP]        Standard - $ET value is unchanged
+        $ES[TACK]       Standard - $ES is set to zero
+Std:    Complies exactly
+Eg:     NEW (A,B) ;Save all variables except A and B
+<A NAME="OPEN"></A>
+Cmnd:   O[PEN]
+Cond:   Valid
+Args:   list of channel:(param1:param2)[:timeout[:namespace]]
+Use:    Obtain ownership of a device or file
+        The channel is from 1 to 15 inclusive.
+        The first parameter is the "thing" that is being opened.
+        The second parameter describes how to open that "thing".
+        One and only one second parameter must be supplied.  It may be
+        supplied in full or abbreviated to the initial character only.
+        First Parameter         Second Parameter
+        "/directory/file"       WRITE, APPEND, READ
+        "/dev/device"           WRITE, READ, IO
+        "host.domain port"      TCPIP
+        "port"                  SERVER[=n]
+        "pipe_name"             PIPE, NEWPIPE
+Std:    Complies exactly
+Eg:     O 1:("/home/joe/data.txt":"WRITE") C 1 ;Delete the file
+        O 2:("80":"S=4") U 2 R JOB      ;Setup the server (4 jobs)
+<A NAME="QUIT"></A>
+Cmnd:   Q[UIT]
+Cond:   Valid
+Args:   space or value
+Use:    1. Terminate the scope of a FOR - no arguments permitted
+        2. Terminate a subroutine invoked with DO - no arguments permitted
+        3. Terminate an extrinisic function and return a value
+Std:    Complies exactly
+Eg:     Q:OK  ;Quit when done
+        Q RESULT ;Return the result
+<A NAME="READ"></A>
+Cmnd:   R[EAD]
+Cond:   Valid
+Args:   list of readargument
+        readargument is one of the following:
+        string literal
+        format command
+        variable[#count][:timeout]
+        *variable[:timeout]
+Use:    When readargument is either string literal or format command, the
+        READ command first cancels any pending read-ahead buffered by the
+        device, then functions as a WRITE command.
+        When #count is present, that is the maximum number of characters
+        that will be read into the specified variable before the read is
+        terminated.  Note that the #count form does not restrict the
+        number of characters that may be read into the $KEY variable.
+        If :timeout is specified, $TEST is set to 0 and $KEY is set to null
+        if the read terminated because of expiration of specified time, 1
+        otherwise.  In any case variable contains all characters received prior
+        to the timeout.
+        $X and $Y are changed by all characters READ that are echoed as though
+        they had been written using WRITE.
+        When the *variable form is used, the ASCII value of the first character
+        read is returned in variable and $KEY is set to null unless ESC
+        processing is on and an Escape $C(27) is received, then variable is
+        given a value of 0 and $KEY contains the escape sequence. If a timeout
+        expired then variable is equal to -1.
+        $X and $Y are unchanged by the use of READ *variable and any key
+        pressed does not echo on a terminal device.
+Std:    Complies with the exception of the vague areas in the standard and
+        the use of character transforms which aren't implemented.
+Eg:     READ !,"Answer: ",ANS:10 ;Give them 10 seconds to answer
+<A NAME="SET"></A>
+Cmnd:   S[ET]
+Cond:   Valid
+Args:   list of [(]destination[,destination2,...)]=source
+        where destination is one of:
+        variable
+        $EC[ODE]
+        $ET[RAP]
+        $EXTRACT(variable[,n[,m]])
+        $K[EY]
+        $PIECE(variable,delim[,n[,m]])
+        $X
+        $Y
+        where source is an expression
+Use:    Assign a value to a variable or substitute new value into piece(s)
+        or character position(s) of variable.
+Std:    Complies exactly with the extension of allowing SET VAR1=@VAR2.
+Eg:     SET $ET="D ^%ERROR" ;Setup the errortrap
+        S $P(LIST,",",5)=DATE ;Update date in list piece 5
+<A NAME="USE"></A>
+Cmnd:   U[SE]
+Cond:   Valid
+Args:   list of channel[:parameters[:namespace]]
+Use:    Make an owned device current for input and/or output.
+        Valid parameters by file/device type are:
+        Parameter               Use with types
+        TERMINATOR=$C(n,...)    all             individual input terminators
+        OUTPUT=$C(n,...)        all             output terminator(s) - max 6
+        [NO]CONTROLC            stdin
+        [NO]CONTROLT            stdin
+        [NO]ESCAPE              dev, tcp, pipe  set/clear escape seq process
+        [NO]ECHO                dev, tcp, pipe  set/clear echo
+        DISCONNECT              tcp (SERVER)    disconnect the current client
+        DELETE=NONE             dev             setup key(s) for delete func
+        DELETE=BACK             dev             setup key(s) for delete func
+        DELETE=DELETE           dev             setup key(s) for delete func
+        DELETE=BOTH             dev             setup key(s) for delete func
+        Note: TERMINATOR arguments must be in the range 0 to 31.
+              TERMINATOR=$C(13,10) means that a <LF> following a <CR>
+              is placed in $KEY not returned in the data.
+Std:    Complies with the exception of the vague areas in the standard
+Eg:     U TERM R *CHK:0 U FILE ;See if the user has hit a key
+	U 0:("TERMINATOR="_$C(1,5,10,13):"NOCONTROLC") ;Set terms, disable ^C
+<A NAME="VIEW"></A>
+Cmnd:   V[IEW]
+Cond:   Valid
+Args:   channel:offset
+        where channel is minus volset number (ie. -1 only currently)
+              offset is block number to read that block
+                        0 to free the view buffer
+                        minus block number to write previously read block
+Use:    Read and write disk data on an open view channel.
+        NOTE: The volume set should be write locked before using VIEW.
+Std:    As the standard is so vague, anything complies exactly
+Eg:     VIEW -1:1	;Get the global directory for MGR
+<A NAME="WRITE"></A>
+Cmnd:   W[RITE]
+Cond:   Valid
+Args:   list of writeargument
+        where writeargument is one of the following
+        format  # carrige return, page feed combination
+                ! carrige return, linefeed combination or specified out term
+                ?n tab to character position n (leftmost posn is 0)
+		/cmd[(params)] to provide device specific control
+        expression - any valid MUMPS expression
+        *intexpr - output the ASCII character intexpr#256
+Use:    Output characters to the current output device.
+        $X and $Y are altered as follows:
+        Graphic char:   incr $X         (31 < character < 127)
+        Backspace:      decr $X to a minimum of 0
+        line feed:      incr $Y
+        carriage ret:   $X = 0
+        form feed:      $X=0, $Y=0
+        WRITE *intexpr does not alter $X or $Y
+Std:    Complies exactly
+Eg:     W "Heading",! ;Write Heading
+<A NAME="XECUTE"></A>
+Cmnd:   X[ECUTE]
+Cond:   Valid - also valid on each argument
+Args:   list of expressions
+Use:    Executing MUMPS code which arises from the process of expression
+        evaluation.
+        Each argument is treated as a DO label where label defines a virtual
+        line in the current routine that looks like label argument-content
+        and is followed by a line consisting simply of space QUIT.
+Std:    Complies exactly
+Eg:     X "W X=1":X=1,"W X not 1":X-1
+</PRE>
+<H2><A NAME="FUNCTIONS">MUMPS Functions</A></H2>
+<A HREF="#DASCII">$ASCII()</A>,
+<A HREF="#DCHAR">$CHAR()</A>,
+<A HREF="#DDATA">$DATA()</A>,
+<A HREF="#DEXTRACT">$EXTRACT()</A>,
+<A HREF="#DFIND">$FIND()</A>,
+<A HREF="#DFNUMBER">$FNUMBER()</A>,
+<A HREF="#DGET">$GET()</A>,
+<A HREF="#DJUSTIFY">$JUSTIFY()</A>,
+<A HREF="#DLENGTH">$LENGTH()</A>,
+<A HREF="#DNAME">$NAME()</A>,
+<A HREF="#DORDER">$ORDER()</A>,
+<A HREF="#DPIECE">$PIECE()</A>,
+<A HREF="#DQLENGTH">$QLENGTH()</A>,
+<A HREF="#DQSUBSCRIPT">$QSUBSCRIPT()</A>,
+<A HREF="#DQUERY">$QUERY()</A>,
+<A HREF="#DRANDOM">$RANDOM()</A>,
+<A HREF="#DREVERSE">$REVERSE()</A>,
+<A HREF="#DSELECT">$SELECT()</A>,
+<A HREF="#DSTACK">$STACK()</A>,
+<A HREF="#DTEXT">$TEXT()</A>,
+<A HREF="#DTRANSLATE">$TRANSLATE()</A>,
+<A HREF="#DVIEW">$VIEW()</A>.
+<PRE>
+<A NAME=DASCII></A>
+Func:   $A[SCII]
+Form:   $A(expr[,int])
+Retn:   The ASCII value of the intth character in the string.
+        The default for int is 1.
+        Should there not be an intth character, returns -1
+Std:    Complies exactly
+Eg:     $A("ABC",2) -> 66
+<A NAME=DCHAR></A>
+Func:   $C[HAR]
+Form:   $C(int1[,int2[,...]])
+Retn:   A string made up of characters whose ASCII values are int1, int2,...
+        If the value of any int is less than 0 or greater than 255 then
+        that int is represented in the output string by nothing.
+        Specifically $C(-1,256) = "".
+Std:    Complies exactly using the ASCII character set
+Eg:     $C(65,66,-1,67) -> "ABC"
+<A NAME=DDATA></A>
+Func:   $D[ATA]
+Form:   $D(variable)
+Retn:    0 - Variable is undefined
+         1 - Variable is defined but has no descendants
+        10 - Variable is undefined but has descendants
+        11 - Variable is defined and has descendants
+Std:    Complies exactly
+Eg:     K A S A(1)=42 W $D(A) -> 10
+<A NAME=DEXTRACT></A>
+Func:   $E[XTRACT]
+Form:   $E(expr[,start[,stop]])
+        where the default for start is 1 and the default for stop is start
+Retn:   Characters from positions start thru stop of expression.
+        Note: May also be used as the destination for the SET command.
+Std:    Complies exactly
+Eg:     $E("ABCD",-1,2) -> "AB"
+<A NAME=DFIND></A>
+Func:   $F[IND]
+Form:   $F(expr1,expr2[,int])
+Retn:   Commencing at character position int (default 1) returns the character
+        position imediately to the right of the first occurence of expr2 in
+        expr1.  Specifically $F("anything","") returns 1.  If expr2 is not
+        found in expr1, returns 0.
+Std:    Complies exactly
+Eg:     $F("ABCDEF","CD") -> 5
+<A NAME=DFNUMBER></A>
+Func:   $FN[UMBER]
+Form:   $FN(numexp,code[,int])
+        where code is zero or more of the following
+        P or p  suround negative numbers with parentheses, positive with spaces
+        T or t  format with trailing sign or (if suppressed) space
+        , (comma) insert a comma every three significant digits
+        + (plus) force a plus sign on positive values
+        - (minus) suppress the minus sign on negative values
+        Note: P may not be used with T, plus or minus ($EC="M2")
+Retn:   Returns numexp edited as per code rounded to int decimal places if int
+        is specified.
+Std:    Complies exactly
+Eg:     $FN(1234.567,"T+,",2) -> 1,234.57+
+<A NAME=DGET></A>
+Func:   $G[ET]
+Form:   $G(variable[,expr])
+Retn:   The value of variable if defined, else expr (default null).
+        Note expr (if specified) is always evaluated.
+Std:    Complies exactly
+Eg:     $G(^DATABASE(1),"Undefined") -> "Undefined" if $D(^DATABASE(1))#2=0
+<A NAME=DJUSTIFY></A>
+Func:   $J[USTIFY]
+Form:   $J(expr,int1[,int2])
+Retn:   expr space padded on the left to a length of int1 characters.
+        If int2 is specified, expr is first rounded to int2 decimal places.
+Std:    Complies exactly
+Eg:     $J("ABC",5) -> "  ABC"
+        $J(.456,6,2) -> "  0.46"
+<A NAME=DLENGTH></A>
+Func:   $L[ENGTH]
+Form:   $L(expr1[,expr2])
+Retn:   If expr2 is specified, returns the number plus one of the
+        nonoverlapping occurances of expr2 in expr1 or if expr2 is
+        the empty string returns 0.
+        If expr2 is not specified, returns a count of characters
+        in expr1.
+Std:    Complies exactly
+Eg:     $L("ABC") -> 3
+        $L("ABC,DEF,GHI",",") -> 3
+<A NAME=DNAME></A>
+Func:   $NA[ME]
+Form:   $NA(variable[,int])
+Retn:   If int unspecified or greater than the number of subscripts in
+        variable, return full name of variable.  If int is less that zero,
+        throw error M39.  If int is zero return name of unsubscripted variable.
+        Else, return variable name and int subscripts up to total number.
+Std:    Complies exactly
+Eg:     $NA(A(1,2,3),0) -> "A"
+        S %=$D(^A(1,2,3)) W $NA(^(6)) -> ^A(1,2,6)
+<A NAME=DORDER></A>
+Func:   $O[RDER]
+Form:   $O(subscripted variable[,int])
+        where int must be 1 or -1
+Retn:   The next (int = 1 or not specified) or previous (int = -1) element
+        at the specified level.  The empty string may be specified as a seed.
+        The collating sequence used is the MUMPS collating sequence.
+Std:    Complies exactly using the MUMPS collating sequence
+Eg:     K A S A(1,2)="",A(1,4)="" then
+        $O(A(1,"")) -> 2
+        $O(A(1,""),1) -> 4
+        $O(A(1,2)) -> 4
+        $O(A(1,4),-1) -> 2
+<A NAME=DPIECE></A>
+Func:   $P[IECE]
+Form:   $P(expr1,expr2[,int1[,int2]])
+        int1 defaults to 1, int2 defaults to int1
+Retn:   Returns the substring of expr1 bounded by but not including the int1th
+        to int2th occurance of expr2 in expr1.
+        Note: May also be used as the destination for the SET command.
+Std:    Complies exactly
+Eg:     $P("ABC,DE,FG,H,I",",",2,4) -> "DE,FG,H"
+<A NAME=DQLENGTH></A>
+Func:   $QL[ENGTH]
+Form:   $QL(name-expr)
+        where name-expr evaluates to the name of a variable
+Retn:   Returns the number of subscripts in the name
+Std:    Complies exactly
+Eg:     $QL("A(3)") -> 1
+        S %=$D(^A(1,2,3)) W $QL($NA(^(6))) -> 3
+<A NAME=DQSUBSCRIPT></A>
+Func:   $QS[UBSCRIPT]
+Form:   $QS(name-expr,int)
+        where name-expr evaluates to the name of a variable
+Retn:   If int = -1 returns the environment if provided
+        If int = 0 returns the un-subscripted variable name
+        Else returns the intth subscript if it exists
+Std:    Complies exactly
+Eg:     $QS("^ABC(1,6,2)",2) -> 6
+<A NAME=DQUERY></A>
+Func:   $Q[UERY]
+Form:   $Q(variable[,int])
+        where int must be 1 or -1
+Retn:   The next (int = 1 or not specified) or previous (int = -1) record
+        in the database or local variable table.  The use of this function
+        causes the naked indicator to point at variable.
+        The returned value will include an environment value only if the
+        original specification did.
+Std:    Complies with the exception that the standard does not allow the
+        second argument.
+        The standard states "The use of this function causes the naked
+        indicator and $REFERENCE to become empty." This has not been done.
+Eg:     K A S A(4,3)="" W $Q(A) -> "A(4,3)"
+<A NAME=DRANDOM></A>
+Func:   $R[ANDOM]
+Form:   $R(int)
+        where int is not less than one ($EC = "M3" if int<1)
+Retn:   Returns a random number in the range 0 to int-1.
+Std:    Complies exactly
+Eg:     $R(1) -> 0
+<A NAME=DREVERSE></A>
+Func:   $RE[VERSE]
+Form:   $RE(expr)
+Retn:   expr in the reverse order
+Std:    Complies exactly
+Eg:     $RE("ABC") -> "CBA"
+<A NAME=DSELECT></A>
+Func:   $S[ELECT]
+Form:   $S(tve1:expr1[,tve2:expr2[,...]])
+        tve is a truth value expression
+Retn:   exprn where tven is the first true tve else error "M4"
+Std:    Complies exactly
+Eg:     K A W $S($D(A):1,1:4) -> 4
+<A NAME=DSTACK></A>
+Func:   $ST[ACK]
+Form:   $ST(int[,code])
+        where int is -1, 0, 1 to $ST(-1)
+          and code is PLACE, MCODE, ECODE (case insensitive)
+Retn:   $ST(-1) returns the largest value for which $ST(value) returns a
+        non-empty string.
+        $ST(0) returns an implementation specific value indicating how this
+        process was started, either RUN or JOB.
+        $ST(n) where n is 1 to $ST(-1) returns how this level of process stack
+        was created (one of DO, XECUTE, $$ or an error code like ",M6,").
+        While int is zero or greater, the following codes may be used:
+        ECODE   the list of ecodes added at this level
+        MCODE   the source line of code identified by "PLACE" below
+        PLACE   the location of a command at this stack level as follows:
+                a) if int is not equal to $STACK and $ST(int,"ECODE") is
+                   empty, the last command executed.
+                b) if int is equal to $STACK and $ST(int,"ECODE") is
+                   empty, the currently executing command.
+                c) if $ST(int,"ECODE") is not empty, the last command to
+                   start execution while $ST(int,"ECODE") was empty.
+Std:    Complies exactly
+Eg:     $ST(1) -> "DO"
+<A NAME=DTEXT></A>
+Func:   $T[EXT]
+Form:   $T(entryref)
+        where entryref is TAG[^ROU] or +OFF[^ROU]
+        and ROU defaults to the current routine
+Retn:   The content of the specified line of the source routine.
+        Specifically $T(+n^ROU) is equivalent to ^$ROUTINE("ROU",n).
+        The exception to this is +0 returns the routine name.
+Std:    Complies exactly
+Eg:     $T(+0^ROU) -> ROU
+        $T(+0) -> current routine name
+<A NAME=DTRANSLATE></A>
+Func:   $TR[ANSLATE]
+Form:   $TR(expr1,expr2[,expr3])
+Retn:   expr1 with each character contained in expr2 removed and replaced
+        with the character in the same position in expr3 if provided.
+Std:    Complies exactly
+Eg:     $TR("ABCDEF","FED","*$") -> "ABC$*"
+<A NAME=DVIEW></A>
+Func:   $V[IEW]
+Form:   $V(channel,offset[,size[,data]])
+Retn:   Data for a 'read' of null for a 'write'.
+        A 'write' is done when arg4 (data) is provided.
+        If size is 1 (default), 2 or 4 the data is integer else string.
+Std:    As the standard is so vague, anything complies exactly
+Eg:     W $V(-1,20,2)	; Index for first key in block
+</PRE>
+<H2><A NAME="VARIABLES">MUMPS Variables</A></H2>
+<A HREF="#VDEVICE">$DEVICE</A>,
+<A HREF="#VECODE">$ECODE</A>,
+<A HREF="#VESTACK">$ESTACK</A>,
+<A HREF="#VETRAP">$ETRAP</A>,
+<A HREF="#VHOROLOG">$HOROLOG</A>,
+<A HREF="#VIO">$IO</A>,
+<A HREF="#VJOB">$JOB</A>,
+<A HREF="#VKEY">$KEY</A>,
+<A HREF="#VPRINCIPAL">$PRINCIPAL</A>,
+<A HREF="#VQUIT">$QUIT</A>,
+<A HREF="#VREFERENCE">$REFERENCE</A>,
+<A HREF="#VSTACK">$STACK</A>,
+<A HREF="#VSTORAGE">$STORAGE</A>,
+<A HREF="#VSYSTEM">$SYSTEM</A>,
+<A HREF="#VTEST">$TEST</A>,
+<A HREF="#VX">$X</A>,
+<A HREF="#VY">$Y</A>.
+<PRE>
+<A NAME=VDEVICE></A>
+Isvn:   $D[EVICE]
+Retn:   0 or 1,error_code,error_text  If piece 1 is 0, returns a full
+        description of the channel in piece 3 (eg. file/device name
+        or ip address port) and the type in piece 2 where the type is:
+                1  - disk file
+                2  - tcpip
+                3  - local pipe
+                4  - device
+Std:    Complies exactly except may not be set.
+Eg:     $D -> "0,2,203.18.85.33 80"
+<A NAME=VECODE></A>
+Isvn:   $EC[ODE]
+Retn:   null or all current MUMPS errors surrounded with commas
+Std:    Complies exactly
+Eg:     $EC -> ""
+<A NAME=VESTACK></A>
+Isvn:   $ES[TACK]
+Retn:   Additional stack levels since last NEW $ES.  May be NEWed.
+Std:    Complies exactly
+Eg:     $ES -> 0
+<A NAME=VETRAP></A>
+Isvn:   $ET[RAP]
+Retn:   Set to code to execute in the event of an error.  May be NEWed and SET.
+Std:    Complies exactly
+Eg:     $ET -> "D ^%ERROR"
+<A NAME=VHOROLOG></A>
+Isvn:   $H[OROLOG]
+Retn:   number of days since 31 Dec 1840, comma, number of seconds since
+        midnight.
+Std:    Complies exactly
+Eg:     $H -> 57623,29373 (Wednesday 07 Oct 1998 08:09:33)
+<A NAME=VIO></A>
+Isvn:   $I[O]
+Retn:   The current io channel.
+Std:    Complies exactly
+Eg:     $I -> 0
+<A NAME=VJOB></A>
+Isvn:   $J[OB]
+Retn:   Process Identification Number (Note, this is not the O/S PID).
+Std:    Complies exactly
+Eg:     $J -> n
+<A NAME=VKEY></A>
+Isvn:   $K[EY]
+Retn:   Control sequence which terminated the last read from the current
+        device.  May be set.
+Std:    Complies exactly
+Eg:     $K -> $C(27,91,65)      ;The <Up> key
+<A NAME=VPRINCIPAL></A>
+Isvn:   $P[RINCIPAL]
+Retn:   The principal io device (if any).
+Std:    Complies exactly (always returns 0)
+Eg:     $P -> "0"
+<A NAME=VQUIT></A>
+Isvn:   $Q[UIT]
+Retn:   Returns 1 if the current level was invoked as an extrinsic function.
+        Else returns 0.
+Std:    Complies exactly
+Eg:     $Q -> 0
+<A NAME=VREFERENCE></A>
+Isvn:   $R[EFERENCE]
+Retn:   Returns the name of the global variable that defined the current value
+        of the "naked indicator" (or is empty when the "naked indicator" is
+        currently undefined).
+Std:    This is not defined in the standard.
+Eg:     $R -> ""
+<A NAME=VSTACK></A>
+Isvn:   $ST[ACK]
+Retn:   Returns the current level of the process stack.
+Std:    Complies exactly
+Eg:     $ST -> 0
+<A NAME=VSTORAGE></A>
+Isvn:   $S[TORAGE]
+Retn:   Number of characters of free space remaining.
+Std:    Complies exactly
+Eg:     $S -> n
+<A NAME=VSYSTEM></A>
+Isvn:   $SY[STEM]
+Retn:   v,s where v is an integer value allocated by the MDC to an implementor
+        and s is defined by that implementor in such a way as to be able to be
+        unique for all the implementor's systems.
+Std:    Complies exactly
+Eg:     $SY -> "50,MUMPS V1.00 for FreeBSD i386"
+<A NAME=VTEST></A>
+Isvn:   $T[EST]
+Retn:   Returns 1 if the last IF or OPEN, LOCK, JOB or READ with timeout was
+        successful, else returns 0.
+Std:    Complies exactly
+        standard.
+Eg:     $T -> 0
+<A NAME=VX></A>
+Isvn:   $X
+Retn:   Approximate horizontal position of the cursor on the current device.
+Std:    Complies exactly
+Eg:     $X -> 0
+<A NAME=VY></A>
+Isvn:   $Y
+Retn:   Approximate vertical position of the cursor on the current device.
+Std:    Complies exactly
+Eg:     $Y -> 0
+</PRE>
+<H2><A NAME="OPERATORS">MUMPS Operators</A></H2>
+<PRE>
+Opr:    _       Underscore
+Use:    String concatenation
+Std:    Complies exactly
+Eg:     "A"_"B" -> "AB"
+
+Opr:    +       Plus
+Use:    Addition
+Std:    Complies exactly
+Eg:     1+1 -> 2
+
+Opr:    -       Minus
+Use:    Subtraction
+Std:    Complies exactly
+Eg:     4-3 -> 1
+
+Opr:    *       Asterix
+Use:    Multiplication
+Std:    Complies exactly
+Eg:     2*2 -> 4
+
+Opr:    /       Slash
+Use:    Division
+Std:    Complies exactly
+Eg:     8/2 -> 4
+
+Opr:    \       Back slash
+Use:    Integer division
+Std:    Complies exactly
+Eg:     5\2 -> 2
+
+Opr:    #       Hash
+Use:    Modulo
+Std:    Complies exactly
+Eg:     5#2 -> 1
+
+Opr:    **      Asterix Asterix
+Use:    Raise to the power
+Std:    Complies exactly
+Eg:     3**2 -> 9
+
+Opr:    =       Equals
+Use:    Equality test
+Std:    Complies exactly
+Eg:     2=2 -> 1
+
+Opr:    <       Less than
+Use:    Compare for less than
+Std:    Complies exactly
+Eg:     1<2 -> 1
+
+Opr:    >       Greater than
+Use:    Compare for greater than
+Std:    Complies exactly
+Eg:     1>2 -> 0
+
+Opr:    ]       Right square bracket
+Use:    Compare for follows
+Std:    Complies exactly
+Eg:     "B"]"A" -> 1
+
+Opr:    [       Left square bracket
+Use:    Contains
+Std:    Complies exactly
+Eg:     "ABC"["A" -> 1
+
+Opr:    ]]      Right square bracket Right square bracket
+Use:    Sorts after
+Std:    Complies exactly
+Eg:     " "]]2 -> 1
+
+Opr:    '       Single quote
+Use:    Logical not - may be used with any relational operator
+Std:    Complies exactly
+Eg:     '4 -> 0
+
+Opr:    &       Ampersand
+Use:    Logical and
+Std:    Complies exactly
+Eg:     4&0 -> 0
+
+Opr:    !       Exclamation
+Use:    Logical or
+Std:    Complies exactly
+Eg:     4!0 -> 1
+
+Opr:    ?       Question
+Use:    Pattern match - see following section on Pattern Match
+Std:    Complies exactly
+Eg:     "ABC"?1.UNP -> 1
+
+Opr:    @       Commercial at
+Use:    Indirection - see following section on Indirection
+Std:    Complies exactly
+Eg:     S A="B",@A=1 sets B to 1
+
+Note:   All MUMPS operations are performed in a strict left to right order.
+        For example: 1+2*3 -> 9
+        Parentheses () may be used to alter this order.
+        For example: 1+(2*3) -> 7
+</PRE>
+<H2><A NAME="PATTERN">Pattern Match</A></H2>
+<PRE>
+Code    Class           Valid characters
+  A     Alphabetic      A -> Z, a -> z
+  C     Control         0 -> 31, 127 -> 255
+  E     Everything      0 -> 255
+  L     Lower case      a -> z
+  N     Numeric         0 -> 9
+  P     Punctuation     32 -> 47, 58 -> 64, 91 -> 96, 123 -> 126
+  U     Upper case      A -> Z
+ lit    Literal         as specified
+
+A pattern is specified as a list of one or more patternatoms.
+A patternatom consists of a minimum, dot, maximum and one or more codes
+where at least one of minimum, dot, maximum must be specified and
+the default minimum is zero and the default maximum is infinite.
+If the dot is not used then an exact number of that patternatom is required.
+
+Alternation where a number of patternatoms may be enclosed in parathensis
+separated by commas indicates logical or of each specified patternatom.
+eg: 2(1U,1N,1P) -> 2UNP
+</PRE>
+<H2><A NAME="INDIRECTION">Indirection</A></H2>
+<PRE>
+
+There are two forms of indirection, these are Name indirection and argument
+indirection.
+
+Name indirection is where the name of a variable (or part of the name of a
+variable) is replaced by @ind (or @ind@).
+
+For example:    S A="ABC" W @A          will write the contents of ABC
+                      and W @A@(1)      will write the contents of ABC(1)
+                S A="ABC(2)" W @A@(1)   will write the contents of ABC(2,1)
+
+Argument indirection is where one or more arguments are replaced by @ind.
+
+For example:    S A="B=1,C=2" S @A      will assign 1 to B and 2 to C
+
+Note:   Argument indirection may not be used with the BREAK, FOR
+        and VIEW commands.
+</PRE>
+<H2><A NAME="ROUTINE">Routine Format</A></H2>
+<PRE>
+
+A routine name is of the form: 1"%".7AN in UCI #1 only
+                           or: 1A.7AN in any UCI
+
+A routine source consists of one or more lines of the form:
+
+        [label[formallist]] sp [levelindicator][commands][;comments]
+   or   ;comments
+
+After the first space additional spaces may be inserted for readability.
+
+A label is one of:      1"%".7AN
+                        1A.7AN
+                        1.8N
+
+A formallist is:        (var1[,var2[,...]])
+A levelindicator is:    one or more dots (with optional spaces)
+commands are:           a valid MUMPS command including its arguments.
+Everything in the line from (and including) the first unquoted ; are comments.
+
+The source of a routine is stored as ^$ROUTINE("NAME",line#)=linesource
+The compiled routine is stored at ^$ROUTINE("NAME",0)=compiledcode
+</PRE>
+<H2><A NAME="SSV">Structured System Variables</A></H2>
+<A HREF="#SGLOBAL">^$GLOBAL()</A>,
+<A HREF="#SJOB">^$JOB()</A>,
+<A HREF="#SLOCK">^$LOCK()</A>,
+<A HREF="#SROUTINE">^$ROUTINE()</A>,
+<A HREF="#SSYSTEM">^$SYSTEM()</A>.
+<PRE>
+
+The names of ssvs are case insensitive and may be abreviated to ^$x where
+x is the first alphabetic character in the name of the ssv.
+
+Note:   $QUERY() may not be used on any ssvn.
+        MERGE may not be used on any ssvn except to compile a routine
+        into ^$ROUTINE (eg. M ^$R("name")=^UTILITY($J).)
+<A NAME=SGLOBAL></A>
+Ssvn:   ^$GLOBAL
+Form:   ^$G(name)=""
+Use:    Provides a list of all globals in a UCI
+        $ORDER() may be used for the global name.
+	^$GLOBAL(name) returns the block number of the top pointer block
+	for the global 'name'.
+	^$GLOBAL("$GLOBAL") returns the global directory block number.
+	^$GLOBAL("$GLOBAL","JOURNAL") sets/returns the default journal action.
+	^$GLOBAL(name,"CHARACTER") will return "M".
+	^$GLOBAL(name,"JOURNAL") may be set to 1 to journal the global.
+Std:    Does not provide collation sequence.
+Act:    This ssv may be used as the source of any MUMPS command but may
+        not be used as the destination except that ...,"JOURNAL") may be set.
+Eg:     S G="" F  S G=$O(^$G(G)) Q:G=""  W G,! ;List all globals in this UCI
+<A NAME=SJOB></A>
+Ssvn:   ^$JOB
+Form:   ^$J(job#)=""
+Use:    Provides a list of all jobs in the environment, this ssv exists once
+        for each environment and is assumed to be in UCI number 1, volset 1.
+	^$JOB returns the maximum permitted number of jobs.
+        $ORDER() may be used for the job number only.  It returns the job
+        numbers of currently active jobs only.
+        The following second etc level subscripts are also provided.
+        Subscript        Contains                        Setable
+        $IO              Current channel number          no
+        $IO,ch#          Name of device/file on chan     no
+        $REFERENCE       Last global reference           no
+        $STACK           Current stack level             no
+        $STACK,lev       as for $STACK(level)            no
+        $STACK,lev,MCODE as for $STACK(level,MCODE)      no
+        $STACK,lev,PLACE as for $STACK(level,PLACE)      no
+	CHARACTER	 Always returns "M"		 no
+	COMMANDS	 Number of commands executed	 no
+        GLOBAL           Global environment (uci#)       by cur job
+        GLOBAL_VOL       Global environment (volset#)    by cur job
+	GREFS		 Number of global references	 no
+        LOCK             Lock environemnt (uci#)         by cur job
+        LOCK_VOL         Lock environemnt (volset#)      by cur job
+	OWNER		 Name of owner			 no
+        OWNER_ID         Id number of owner              yes with priv
+        PID              Operating system process id     no
+        PRIORITY         Current process priority        yes with priv
+        PRIV             Current process privilege       yes with priv
+        PROCESS_START    Date,Time process started       no
+        ROUTINE          Routine environment (uci#)      by cur job
+        ROUTINE_NAME     Routine name			 no
+        ROUTINE_VOL      Routine environment (volset#)   by cur job
+
+Std:    Does not provide character information.  Does provide additional info.
+Act:    This ssv may be used as the source of any MUMPS command and a ^$J(n)
+        node may be KILLed by a privileged (or same) user or process.
+        Note: K ^$J is a signal to shutdown the environment.
+Eg:     W ^$J(JN,"$REFERENCE"),!,^$J(JN,"$STACK",^$J(JN,"$STACK"),"MCODE"),!
+        ;Write last global reference and current routine line source for job JN
+        K ^$J(104) ;Abort job 104
+        K ^$J ;Shutdown the system
+<A NAME=SLOCK></A>
+Ssvn:   ^$LOCK
+Form:   ^$L(variable_reference)=owning_job#,lock_count
+Use:    Provides a list of all LOCKs held in a UCI.
+Std:    The standard is too vague to say
+Act:    This ssv may be used as the source of any MUMPS command and may be
+        KILLed by suitably privileged jobs.
+Eg:     S L="" F  S L=$O(^$L(L)) Q:L=""  W ^$L(L),?10,L,! ;List all locks
+<A NAME=SROUTINE></A>
+Ssvn:   ^$ROUTINE
+Form:   ^$R("routine_name")=""
+Use:    Provides storage for all routines in a UCI as:
+                ^$ROUTINE("name",0)=compiledcode
+                ^$ROUTINE("name",line#)=linesource
+Act:    This ssv may be used as the source of any MUMPS command and may be
+        MERGEd and KILLed by suitably privileged jobs.  Note that a MERGE
+        to ^$R() must be from a suitable source - this re-stores the routine
+        source and compiles it into ^$R(name,0).  $ORDER is available.
+        MERGE ^$R(rou)=^$R(rou) may be used to re-compile a routine.
+	^$ROUTINE(name,"CHARACTER") will return "M".
+Std:    Provides more.
+Eg:     M ^$R("TESTROU")=^UTILITY($J)
+<A NAME=SSYSTEM></A>
+Ssvn:   ^$SYSTEM
+Form:   ^$S(...)=data
+Use:    Provides system specific data (eg. database statistics)
+Act:    This ssv may be SET and KILLed by suitably privileged jobs
+        where indicated.
+        $ORDER is available for ^$S("VOL","") and ^$S("VOL",n,"UCI","").
+        Subscript       Contains                        Setable
+	$NEXTOK		Enable/Disable $NEXT		Set with privs
+	EOK		Enable/Disable Exponent junk	Set with privs
+	OFFOK		Enable/Disable DO/GO offset	Not yet implemented
+	TRANTAB,n	dest_global=source_glob		Set with privs
+        VOL,n,BLOCK     block size for volume set n     no
+        VOL,n,FILE      file for volset n               yes (to mount volset)
+        VOL,n,FREE	number of free blocks in volume no
+        VOL,n,HEADER    header blk size for volume n    no
+	VOL,n,JOURNAL_AVAILABLE current journal status  no
+	VOL,n,JOURNAL_FILE Journal file (incl path)	yes in single user mode
+	VOL,n,JOURNAL_SIZE Current file size		yes to 0 to zero jrnl
+	VOL,n,JOURNAL_REQUESTED Enable/Disable journal  yes with privs
+        VOL,n,NAME      name of volume set              yes in single user mode
+        VOL,n,SIZE      size of volume set in blocks    yes in single user mode
+        VOL,n,UCI,n     environemnt (uci) name          yes (to create uci)
+        VOL,n,WRITELOCK writable status of volume set	yes (to 1 or 0)
+        VOL,n,param     usage parameters for vol set    no
+
+        params are: blkalloc Block Allocates
+                    blkdeall Block Deallocates
+                    blkreorg Block Reorganizes
+                    dbdat    Global $DATAs
+                    dbget    Global Gets
+                    dbkil    Global Kills
+                    dbord    Global $ORDERs
+                    dbqry    Global $QUERYs
+                    dbset    Global Sets
+                    lastok   Search Last Successes
+                    lasttry  Search Last Tries
+                    logrd    Logical Block Reads
+                    logwt    Logical Block Writes
+                    phyrd    Physical Block Reads
+                    phywt    Physical Block Writes
+
+Std:    Does not conform.
+Eg.     W ^$S("VOL",1,"dbget")                          ; Print DB Gets
+        S ^$S("VOL",1,"UCI",2)="FRED"                   ; Create environment
+</PRE></BODY></HTML>
+
+
