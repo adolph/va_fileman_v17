@@ -18,3 +18,24 @@ Iterate over global subscripts with values:
 10	^DIE(17,0)="BACKGROUND BACKUP^2980327^Z^2001^^@"
 ```
 
+Count subscripts for a global:
+
+```
+>s rf=$na(^DIE),ctr=0
+
+>f  {s i=$o(@rf@(i)) q:i=""  s %=$i(ctr)} zw ctr
+ctr=7746
+```
+
+How many subscripts for ^DIE(0)? Output them:
+```
+>s rf=$na(^DIE(0)),ctr=0                        
+
+>f  {s i=$o(@rf@(i)) q:i=""  s %=$i(ctr)} zw ctr
+ctr=2
+
+>f  {s i=$o(@rf@(i)) q:i=""  s %=$i(ctr) zw i} zw ctr
+i=0
+i="DR"
+ctr=4
+```
