@@ -38,5 +38,38 @@ ctr=2
 i=0
 i="DR"
 ctr=2
+```
 
+Dictionary names:
+```
+>s rf=$na(^DIC),ctr=0
+
+>f  {s i=$o(@rf@(i)) q:(i="")!($i(ctr)>max)  w i,$c(9),@rf@(i,0),!} k ctr
+0	PROTOCOL
+.2	DESTINATION^.21^79^40
+.21	TEST^.21^2^2
+.4	PRINT TEMPLATE
+.401	SORT TEMPLATE
+.402	INPUT TEMPLATE
+.5	FUNCTION^.5I
+.7	MUMPS OPERATING SYSTEM
+1	FILE
+1.1	AUDIT
+```
+
+Global Names:
+```
+>s rf="",ctr=0,max=10
+
+>f  {s rf=$o(^$GLOBAL(rf)) q:(rf="")!($i(ctr)>max)  i (rf'["%q")&(rf'["CacheTemp")&(rf'["ISC.")  { w rf,$c(9),$d(@rf),$c(9),"""",$s($d(@rf)#2=1:@rf,1:""),"""",!}} k ctr
+^%ET	11	""
+^%ZIS	11	"0"
+^%ZMED	11	""
+^%ZOSF	11	""
+^%ZRTL	10	""
+^%ZSIGN	10	""
+^%ZTMS	11	""
+^%ZTSCH	11	""
+^%ZTSK	11	""
+^%ZUA	11	""
 ```
