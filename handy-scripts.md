@@ -29,13 +29,14 @@ ctr=7746
 
 How many subscripts for ^DIE(0)? Output them:
 ```
->s rf=$na(^DIE(0)),ctr=0                        
+>s rf=$na(^DIE(0)),ctr=0                                     
 
->f  {s i=$o(@rf@(i)) q:i=""  s %=$i(ctr)} zw ctr
+>f  {s i=$o(@rf@(i)) q:i=""  s %=$i(ctr)} zw ctr s ctr=0     
 ctr=2
 
->f  {s i=$o(@rf@(i)) q:i=""  s %=$i(ctr) zw i} zw ctr
+>f  {s i=$o(@rf@(i)) q:i=""  s %=$i(ctr) zw i} zw ctr s ctr=0
 i=0
 i="DR"
-ctr=4
+ctr=2
+
 ```
