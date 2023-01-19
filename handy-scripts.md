@@ -1,6 +1,6 @@
 # Handy Scripts
 
-(Language Guide at SourceForge)[https://mumps.sourceforge.net/docs.html]
+[Language Guide at SourceForge](https://mumps.sourceforge.net/docs.html)
 
 Iterate over global subscripts with values:
 
